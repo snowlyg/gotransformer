@@ -1,5 +1,5 @@
 # gotransform
-简单实现 struct , map ，slice 类型间赋值
+简单实现接口数据格式化
 
 ## Example
 
@@ -7,27 +7,57 @@
 package main
 
 import (
-	"fmt"
-	"github.com/Shopify/goreferrer"
+"fmt"
+"time"
+
+"github.com/snowlyg/gotransform"
 )
 
-var urls = []string{
-	"http://ca.search.yahoo.com/search?p=hello",
-	"https://twitter.com/jdoe/status/391149968360103936",
-	"http://yoursite.com/links",
+type BaseModel struct {
+	Id        int64
+	CreatedAt time.Time `orm:"auto_now_add;type(datetime);column(created_at);type(timestamp)"`
+	UpdatedAt time.Time `orm:"auto_now;type(datetime);column(updated_at);type(timestamp)"`
 }
 
-func main() {
-	for _, url := range urls {
-		r := goreferrer.DefaultRules.Parse(url)
-		switch r.Type {
-		case goreferrer.Search:
-			fmt.Printf("Search %s: %s\n", r.Label, r.Query)
-		case goreferrer.Social:
-			fmt.Printf("Social %s\n", r.Label)
-		case goreferrer.Indirect:
-			fmt.Printf("Indirect: %s\n", r.URL)
-		}
-	}
+
+type Model struct {
+	BaseModel
+	Name        string `orm:"column(Name);null" description:""`
+	Rmk          string    `orm:"column(rmk);size(255);null" description:""`
+	DeletedAt    time.Time `form:"-" orm:"column(deleted_at);type(timestamp);null" `
 }
+
+type Response struct {
+	Id           int64
+	SeqNo        string
+	CheckInfo    string
+	DealFlag     string
+	EtpsPreentNo string
+	BusinessId   string
+	ManageResult string
+	Reason       string
+	CreateDate   string
+	Rmk          string
+	DeletedAt    string
+	CreatedAt    string
+	UpdatedAt    string
+}
+
+
+func main()  {
+    response := Response{}
+    baseModel := BaseModel{1,time.Now(),time.Now()}
+    model := Model{baseModel,"name","remark",time.Now()}
+    g := gotransform.NewTransform(&response, model, time.RFC3339)
+    err := g.Transformer()
+    if err != nil {
+        _ = fmt.Sprintf("err:%v",err)
+    }
+
+    _ = fmt.Sprintf("response:%v",response)
+
+}
+
+
+
 ```
