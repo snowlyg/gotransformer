@@ -86,7 +86,7 @@ func transformInnerDataKindIsStructOrPtr(inObjE reflect.Value, outObjETField ref
 		} else if outObjETField.Name == "Id" && inObjETypeField.Name == "BaseModel" {
 			inObjEFValue = reflect.ValueOf(inObjEFValue)
 			outObjEFValue = reflect.ValueOf(outObjEFValue)
-			Transform(&outObjEFValue, &inObjEFValue)
+			outObjEFValue.SetInt(outObjEFValue.FieldByName("Id").Elem().Int())
 		}
 	}
 }
