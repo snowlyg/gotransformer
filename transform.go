@@ -24,8 +24,12 @@ func transformDataKindIsStructOrPtr(outObjE reflect.Value, inObj interface{}) {
 	for i := 0; i < outObjE.NumField(); i++ {
 		outObjEFValue := outObjE.Field(i)
 		if !outObjEFValue.CanSet() {
-			utils.LogDebug(fmt.Sprintf("数据无法修改:%v", outObjEFValue))
+			outObjEFValue = outObjE.FieldByName("Id")
+			outObjEFValue.SetInt(vaInObj.Int())
+			continue
+			utils.LogDebug(fmt.Sprintf("数据无法修改:%v,%v", outObjEFValue, outObjE))
 		}
+
 		outObjETField := outObjET.Field(i)
 		switch vaInObj.Kind() {
 		case reflect.String:
@@ -82,7 +86,7 @@ func transformInnerDataKindIsStructOrPtr(inObjE reflect.Value, outObjETField ref
 		} else if outObjETField.Name == "BaseTransform" && inObjETypeField.Name == "BaseModel" {
 			inObjEFValue = reflect.ValueOf(inObjEFValue)
 			outObjEFValue = reflect.ValueOf(outObjEFValue)
-			Transform(outObjEFValue, inObjEFValue)
+			Transform(&outObjEFValue, &inObjEFValue)
 		}
 	}
 }
