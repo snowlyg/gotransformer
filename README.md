@@ -58,6 +58,21 @@ func main()  {
 
     _ = fmt.Sprintf("response:%v",response)
 
+    // slice
+    models := []*Model{&model}
+	var responses []*Response
+	for _, m := range models {
+		r := Response{}
+		    g1 := gotransform.NewTransform(&r, m, time.RFC3339)
+            err := g1.Transformer()
+            if err != nil {
+                _ = fmt.Sprintf("err:%v",err)
+            }
+           
+		responses = append(responses, &r)
+   _ = fmt.Sprintf("responses:%v",responses)
+	}
+
 }
 
 
