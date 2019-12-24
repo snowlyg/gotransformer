@@ -9,14 +9,16 @@ import (
 )
 
 type Transform struct {
-	OutputObj interface{}
-	InsertObj interface{}
+	OutputObj  interface{}
+	InsertObj  interface{}
+	TimeFormat string
 }
 
-func NewTransform(outObj, inObj interface{}) *Transform {
+func NewTransform(outObj, inObj interface{}, timeFormat string) *Transform {
 	return &Transform{
-		OutputObj: outObj,
-		InsertObj: inObj,
+		OutputObj:  outObj,
+		InsertObj:  inObj,
+		TimeFormat: timeFormat,
 	}
 }
 
@@ -36,6 +38,14 @@ func (t *Transform) GetOutputValueElemType() reflect.Type {
 	return reflect.ValueOf(t.OutputObj).Elem().Type()
 }
 
+func (t *Transform) GetOutputValueElemField(i int) reflect.Value {
+	return reflect.ValueOf(t.OutputObj).Elem().Field(i)
+}
+
+func (t *Transform) GetOutputValueElemTypeField(i int) reflect.StructField {
+	return reflect.ValueOf(t.OutputObj).Elem().Type().Field(i)
+}
+
 func (t *Transform) GetInsertValue() reflect.Value {
 	return reflect.ValueOf(t.InsertObj)
 }
@@ -52,28 +62,34 @@ func (t *Transform) GetInsertValueElemType() reflect.Type {
 	return reflect.ValueOf(t.InsertObj).Elem().Type()
 }
 
+func (t *Transform) GetInsertValueElemField(i int) reflect.Value {
+	return reflect.ValueOf(t.InsertObj).Elem().Field(i)
+}
+
+func (t *Transform) GetInsertValueElemTypeField(i int) reflect.StructField {
+	return reflect.ValueOf(t.InsertObj).Elem().Type().Field(i)
+}
+
 func (t *Transform) Transformer() error {
+
 	if t.GetOutputValueKind() != reflect.Ptr {
 		return errors.New("输出数据格式必须是指针")
 	}
 
 	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
-		of := t.GetOutputValueElem().Field(i)
-		otf := t.GetOutputValueElemType().Field(i)
+		of := t.GetOutputValueElemField(i)
+		otf := t.GetOutputValueElemTypeField(i)
+		// utils.LogDebug(fmt.Sprintf("OutputType =》 %v , OutputValue => %v", otf, of))
 		if !t.GetOutputValueElem().CanSet() {
-			utils.LogDebug(fmt.Sprintf("数据无法修改：  Type =》 %v , Value => %v", otf, of))
+			utils.LogDebug(fmt.Sprintf("OutputType =》 %v , OutputValue => %v", otf, of))
 			continue
 		}
 
-		if t.GetInsertValueKind() == reflect.Struct {
-			utils.LogDebug(fmt.Sprintf("数据无法修改：  Type =》 %v , Value => %v", t.GetInsertValueElemType(), t.GetInsertValue))
-		}
-
-		// itf := t.GetInsertValueElemType().Field(i)
 		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
-			inf := t.GetInsertValueElem().Field(iI)
-			intf := t.GetInsertValueElemType().Field(iI)
-			if otf.Name == intf.Name {
+			inf := t.GetInsertValueElemField(iI)
+			into := t.GetInsertValueElemTypeField(iI)
+			// utils.LogDebug(fmt.Sprintf("InsertType =》 %v , InsertValue => %v", into, inf))
+			if otf.Name == into.Name {
 				if inf.Type() == of.Type() {
 					switch inf.Kind() {
 					case reflect.String:
@@ -86,31 +102,32 @@ func (t *Transform) Transformer() error {
 						of.SetInt(inf.Int())
 					case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 						of.SetUint(inf.Uint())
-					// case reflect.Struct:
-					// 	inf = reflect.ValueOf(inf)
-					// 	of = reflect.ValueOf(of)
-					// 	Transform(of, inf)
-					// case reflect.Ptr:
-					// 	Transform(of, inf)
 					default:
 						utils.LogDebug(fmt.Sprintf("数据类型错误:%v,%v", inf.Kind(), inf))
 					}
 
 				}
-			} else if otf.Name == "Id" && intf.Name == "BaseModel" {
-				// inf = reflect.ValueOf(&inf)
-				// of = reflect.ValueOf(of)
-				// id := of.Elem().FieldByName("Id").Elem().Int()
-				utils.LogDebug(of.Elem().FieldByName("Id").Elem())
-				utils.LogDebug(of.Elem().FieldByName("Id"))
-				utils.LogDebug(of.Elem())
-				utils.LogDebug(of)
-				utils.LogDebug(inf)
-				// utils.LogDebug(id)
-				// of.SetInt(id)
+			} else if into.Name == "BaseModel" {
+				if otf.Name == "Id" {
+					of.SetInt(inf.FieldByName("Id").Interface().(int64))
+				} else if otf.Name == "CreatedAt" {
+					createdAt := t.setTime(inf, "CreatedAt")
+					of.SetString(createdAt)
+				} else if otf.Name == "UpdatedAt" {
+					createdAt := t.setTime(inf, "UpdatedAt")
+					of.SetString(createdAt)
+				}
 			}
 		}
 	}
 
 	return nil
+}
+
+func (t *Transform) setTime(inf reflect.Value, fieldName string) string {
+	format := inf.FieldByName(fieldName).MethodByName("Format")
+	m := []reflect.Value{reflect.ValueOf(t.TimeFormat)}
+	createdAt := format.Call(m)
+
+	return createdAt[0].Interface().(string)
 }
