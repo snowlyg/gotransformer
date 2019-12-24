@@ -1,4 +1,4 @@
-package GoTransform
+package gotransform
 
 import (
 	"fmt"
@@ -10,43 +10,39 @@ import (
 // 设置值
 func Transform(outObj interface{}, inObj interface{}) {
 	outObjValue := reflect.ValueOf(outObj)
-	if outObjValue.Kind() == reflect.Struct { // 不是指针获取指针
-		//outObjValue = reflect.ValueOf(&outObj)
-	} else {
-		transformDataKindIsStructOrPtr(outObjValue.Elem(), inObj)
+	if outObjValue.Kind() == reflect.Ptr { // 不是指针获取指针
+		transformDataKindIsPtr(outObjValue.Elem(), inObj)
 	}
 
 }
 
-func transformDataKindIsStructOrPtr(outObjE reflect.Value, inObj interface{}) {
+func transformDataKindIsPtr(outObjE reflect.Value, inObj interface{}) {
 	outObjET := outObjE.Type()
 	vaInObj := reflect.ValueOf(inObj)
 	for i := 0; i < outObjE.NumField(); i++ {
 		outObjEFValue := outObjE.Field(i)
 		if !outObjEFValue.CanSet() {
-			outObjEFValue = outObjE.FieldByName("Id")
 			utils.LogDebug(fmt.Sprintf("数据无法修改:%v,%v", outObjEFValue, 1))
-			outObjEFValue.SetInt(1)
 			continue
 		}
 
 		outObjETField := outObjET.Field(i)
 		switch vaInObj.Kind() {
-		case reflect.String:
-			outObjEFValue.SetString(vaInObj.String())
-		case reflect.Bool:
-			outObjEFValue.SetBool(vaInObj.Bool())
-		case reflect.Float64, reflect.Float32:
-			outObjEFValue.SetFloat(vaInObj.Float())
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			outObjEFValue.SetInt(vaInObj.Int())
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			outObjEFValue.SetUint(vaInObj.Uint())
-		case reflect.Struct:
-			vaInObj := reflect.ValueOf(&inObj) // 不是指针获取指针
-			transformInnerDataKindIsStructOrPtr(vaInObj.Elem(), outObjETField, outObjEFValue)
+		// case reflect.String:
+		// 	outObjEFValue.SetString(vaInObj.String())
+		// case reflect.Bool:
+		// 	outObjEFValue.SetBool(vaInObj.Bool())
+		// case reflect.Float64, reflect.Float32:
+		// 	outObjEFValue.SetFloat(vaInObj.Float())
+		// case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		// 	outObjEFValue.SetInt(vaInObj.Int())
+		// case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		// 	outObjEFValue.SetUint(vaInObj.Uint())
+		// case reflect.Struct:
+		// 	vaInObj := reflect.ValueOf(&inObj) // 不是指针获取指针
+		// 	transformInnerDataKindIsPtr(vaInObj.Elem(), outObjETField, outObjEFValue)
 		case reflect.Ptr:
-			transformInnerDataKindIsStructOrPtr(vaInObj.Elem(), outObjETField, outObjEFValue)
+			transformInnerDataKindIsPtr(vaInObj.Elem(), outObjETField, outObjEFValue)
 		default:
 			utils.LogDebug(fmt.Sprintf("数据类型错误:%v,%v", vaInObj.Kind(), vaInObj))
 		}
@@ -54,7 +50,8 @@ func transformDataKindIsStructOrPtr(outObjE reflect.Value, inObj interface{}) {
 	}
 }
 
-func transformInnerDataKindIsStructOrPtr(inObjE reflect.Value, outObjETField reflect.StructField, outObjEFValue reflect.Value) {
+func transformInnerDataKindIsPtr(inObjE reflect.Value, outObjETField reflect.StructField, outObjEFValue reflect.Value) {
+
 	inObjEType := inObjE.Type()
 	for iI := 0; iI < inObjE.NumField(); iI++ {
 		inObjEFValue := inObjE.Field(iI)
@@ -72,12 +69,12 @@ func transformInnerDataKindIsStructOrPtr(inObjE reflect.Value, outObjETField ref
 					outObjEFValue.SetInt(inObjEFValue.Int())
 				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 					outObjEFValue.SetUint(inObjEFValue.Uint())
-				case reflect.Struct:
-					inObjEFValue = reflect.ValueOf(inObjEFValue)
-					outObjEFValue = reflect.ValueOf(outObjEFValue)
-					Transform(outObjEFValue, inObjEFValue)
-				case reflect.Ptr:
-					Transform(outObjEFValue, inObjEFValue)
+				// case reflect.Struct:
+				// 	inObjEFValue = reflect.ValueOf(inObjEFValue)
+				// 	outObjEFValue = reflect.ValueOf(outObjEFValue)
+				// 	Transform(outObjEFValue, inObjEFValue)
+				// case reflect.Ptr:
+				// 	Transform(outObjEFValue, inObjEFValue)
 				default:
 					utils.LogDebug(fmt.Sprintf("数据类型错误:%v,%v", inObjEFValue.Kind(), inObjEFValue))
 				}
@@ -86,7 +83,13 @@ func transformInnerDataKindIsStructOrPtr(inObjE reflect.Value, outObjETField ref
 		} else if outObjETField.Name == "Id" && inObjETypeField.Name == "BaseModel" {
 			inObjEFValue = reflect.ValueOf(&inObjEFValue)
 			outObjEFValue = reflect.ValueOf(outObjEFValue)
-			outObjEFValue.SetInt(outObjEFValue.Elem().FieldByName("Id").Elem().Int())
+			id := outObjEFValue.Elem().FieldByName("Id").Elem().Int()
+			utils.LogDebug(outObjEFValue.Elem().FieldByName("Id").Elem())
+			utils.LogDebug(outObjEFValue.Elem().FieldByName("Id"))
+			utils.LogDebug(outObjEFValue.Elem())
+			utils.LogDebug(outObjEFValue)
+			utils.LogDebug(id)
+			outObjEFValue.SetInt(id)
 		}
 	}
 }
