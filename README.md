@@ -13,13 +13,14 @@ import (
 "github.com/snowlyg/gotransform"
 )
 
+// 基础数据模型  beego/orm 
 type BaseModel struct {
 	Id        int64
 	CreatedAt time.Time `orm:"auto_now_add;type(datetime);column(created_at);type(timestamp)"`
 	UpdatedAt time.Time `orm:"auto_now;type(datetime);column(updated_at);type(timestamp)"`
 }
 
-
+// 数据模型
 type Model struct {
 	BaseModel
 	Name        string `orm:"column(Name);null" description:""`
@@ -27,6 +28,7 @@ type Model struct {
 	DeletedAt    time.Time `form:"-" orm:"column(deleted_at);type(timestamp);null" `
 }
 
+// 格式化数据
 type Response struct {
 	Id           int64
 	SeqNo        string
