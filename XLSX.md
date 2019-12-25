@@ -1,4 +1,4 @@
-## Excel 导入数据转换
+## Excel 导入行数据转换
 
 ```go
 package main
@@ -50,7 +50,7 @@ func main()  {
    		if roI > 0 {
    			// 将数组  转成对应的 map
    			m := Model{}
-   			x := gotransform.NewXlxsTransform(&m, titles, row)
+   			x := gotransform.NewXlxsTransform(&m, titles, row,"",nil)
    			err := x.XlxsTransformer()
    			if err != nil {
                 fmt.Println(err)
@@ -62,6 +62,59 @@ func main()  {
    	}
 
     fmt.Println(ms)
+
+
+}
+
+```
+
+
+## Excel 导入单元格数据转换
+
+```go
+package main
+
+import (
+"fmt"
+"time"
+
+"github.com/360EntSecGroup-Skylar/excelize"
+"github.com/snowlyg/gotransform"
+)
+
+// 基础数据模型  beego/orm 
+type BaseModel struct {
+	Id        int64
+	CreatedAt time.Time `orm:"auto_now_add;type(datetime);column(created_at);type(timestamp)"`
+	UpdatedAt time.Time `orm:"auto_now;type(datetime);column(updated_at);type(timestamp)"`
+}
+
+// 数据模型
+type Model struct {
+	BaseModel
+	Name        string `orm:"column(Name);null" description:""`
+	FirstName   string    `orm:"column(first_name);size(255);null" description:""`
+	DeletedAt   time.Time `form:"-" orm:"column(deleted_at);type(timestamp);null" `
+}
+
+
+func main()  {
+    titles := map[string]string{"Name":"B1","FirstName":"B2"}
+   f, err := excelize.OpenFile("Book1.xlsx")
+      if err != nil {
+          fmt.Println(err)
+          return
+      }
+
+    m := Model{} 
+    x := gotransform.NewXlxsTransform(&m, titles, nil, "sheet1", f)
+	err = x.XlxsCellTransformer()
+	if err != nil {
+		fmt.Println(err)
+        return 
+	}
+	
+    fmt.Println(m)
 
 
 }

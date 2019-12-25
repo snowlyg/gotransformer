@@ -4,19 +4,26 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"time"
+
+	"github.com/360EntSecGroup-Skylar/excelize"
 )
 
 type XlxsTransform struct {
 	OutputObj interface{}
 	Title     map[string]string
 	Row       []string
+	ExcelName string
+	File      *excelize.File
 }
 
-func NewXlxsTransform(outObj interface{}, title map[string]string, row []string) *XlxsTransform {
+func NewXlxsTransform(outObj interface{}, title map[string]string, row []string, excelName string, file *excelize.File) *XlxsTransform {
 	return &XlxsTransform{
 		OutputObj: outObj,
 		Title:     title,
 		Row:       row,
+		ExcelName: excelName,
+		File:      file,
 	}
 }
 
@@ -82,6 +89,78 @@ func (t *XlxsTransform) XlxsTransformer() error {
 	}
 
 	return nil
+}
+
+// get excel cell data
+func (t *XlxsTransform) XlxsCellTransformer() error {
+	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
+		of := t.GetOutputValueElemField(i)
+		otf := t.GetOutputValueElemTypeField(i)
+
+		for iw, v := range t.Title {
+
+			if iw == otf.Name {
+				cell, err := t.GetExcelCell(v)
+				if err != nil {
+					return err
+				}
+
+				switch of.Kind() {
+				case reflect.String:
+					of.SetString(cell)
+				case reflect.Float64:
+					if len(cell) > 0 {
+						objV, err := strconv.ParseFloat(cell, 64)
+						if err != nil {
+							fmt.Printf("Parse:%v,%v,%v", err, cell, otf.Name)
+						}
+						of.SetFloat(objV)
+					}
+				case reflect.Int8:
+					if len(cell) > 0 {
+						objV, err := strconv.Atoi(cell)
+						if err != nil {
+							fmt.Printf("Parse:%v,%v,%v", err, cell, otf.Name)
+						}
+						of.SetInt(int64(objV))
+					}
+				case reflect.Uint64:
+					reflect.ValueOf(cell)
+					objV, err := strconv.ParseUint(v, 0, 64)
+					if err != nil {
+						fmt.Printf("Parse:%v,%v,%v", err, cell, otf.Name)
+					}
+					of.SetUint(objV)
+				case reflect.Struct:
+					if len(cell) > 0 {
+						objV, err := time.Parse("20060102", cell)
+						if err != nil {
+							fmt.Printf("Parse:%v,%v,%v", err, cell, otf.Name)
+						}
+						of.Set(reflect.ValueOf(objV))
+					}
+
+				default:
+					fmt.Printf("未知类型:%v,%v", cell, otf.Name)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// 导入基础参数 Cell 文件内容
+func (t *XlxsTransform) GetExcelCell(axis string) (string, error) {
+
+	cell, err := t.File.GetCellValue(t.ExcelName, axis)
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+
+	return cell, nil
+
 }
 
 // IsExists
