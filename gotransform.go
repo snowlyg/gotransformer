@@ -93,6 +93,8 @@ func (t *Transform) Transformer() error {
 					switch inf.Kind() {
 					case reflect.String:
 						of.SetString(inf.String())
+					case reflect.Slice:
+						reflect.Copy(of, inf)
 					case reflect.Bool:
 						of.SetBool(inf.Bool())
 					case reflect.Float64, reflect.Float32:
