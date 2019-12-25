@@ -93,8 +93,18 @@ func (t *Transform) Transformer() error {
 		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
 			inf := t.GetInsertValueElemField(iI)
 			into := t.GetInsertValueElemTypeField(iI)
-
-			if into.Name == otf.Name {
+			if tag != nil {
+				if tag.Key == "Func" && into.Name == otf.Name {
+					args := []reflect.Value{reflect.ValueOf(inf.String())}
+					rs := t.CallOutFunc(tag).Call(args)
+					of.SetString(rs[0].Interface().(string))
+				} else if inf.Kind() == reflect.Ptr {
+					if into.Name == tag.Key {
+						relation := inf.Elem().FieldByName(tag.Value)
+						t.setValue(relation, of)
+					}
+				}
+			} else if into.Name == otf.Name {
 				if inf.Type() == of.Type() {
 					t.setValue(inf, of)
 				}
@@ -107,17 +117,6 @@ func (t *Transform) Transformer() error {
 				} else if otf.Name == "UpdatedAt" {
 					createdAt := t.setTime(inf, "UpdatedAt")
 					of.SetString(createdAt)
-				}
-			} else if tag != nil {
-				if tag.Key == "Func" {
-					args := []reflect.Value{reflect.ValueOf(inf.String())}
-					rs := t.CallOutFunc(tag).Call(args)
-					of.SetString(rs[0].Interface().(string))
-				} else if inf.Kind() == reflect.Ptr {
-					if into.Name == tag.Key {
-						relation := inf.Elem().FieldByName(tag.Value)
-						t.setValue(relation, of)
-					}
 				}
 			}
 
