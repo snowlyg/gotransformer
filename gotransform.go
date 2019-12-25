@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-
-	"BeeCustom/utils"
 )
 
 type Transform struct {
@@ -79,16 +77,16 @@ func (t *Transform) Transformer() error {
 	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
 		of := t.GetOutputValueElemField(i)
 		otf := t.GetOutputValueElemTypeField(i)
-		// utils.LogDebug(fmt.Sprintf("OutputType =》 %v , OutputValue => %v", otf, of))
+		// fmt.Sprintf("OutputType =》 %v , OutputValue => %v", otf, of)
 		if !t.GetOutputValueElem().CanSet() {
-			utils.LogDebug(fmt.Sprintf("OutputType =》 %v , OutputValue => %v", otf, of))
+			fmt.Sprintf("OutputType =》 %v , OutputValue => %v", otf, of)
 			continue
 		}
 
 		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
 			inf := t.GetInsertValueElemField(iI)
 			into := t.GetInsertValueElemTypeField(iI)
-			// utils.LogDebug(fmt.Sprintf("InsertType =》 %v , InsertValue => %v", into, inf))
+			// fmt.Sprintf("InsertType =》 %v , InsertValue => %v", into, inf)
 			if otf.Name == into.Name {
 				if inf.Type() == of.Type() {
 					switch inf.Kind() {
@@ -103,7 +101,7 @@ func (t *Transform) Transformer() error {
 					case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 						of.SetUint(inf.Uint())
 					default:
-						utils.LogDebug(fmt.Sprintf("数据类型错误:%v,%v", inf.Kind(), inf))
+						fmt.Sprintf("数据类型错误:%v,%v", inf.Kind(), inf)
 					}
 
 				}
