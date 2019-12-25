@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 type Transform struct {
@@ -83,12 +84,15 @@ func (t *Transform) Transformer() error {
 			continue
 		}
 
+		tag := otf.Tag
+		name := tag.Get("gtf")
+		names := strings.Split(name, ".")
+
 		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
 			inf := t.GetInsertValueElemField(iI)
 			into := t.GetInsertValueElemTypeField(iI)
 
-			if otf.Name == into.Name {
-				//fmt.Printf("InsertType =》 %v , InsertValue => %v, InsertValueKind => %v", into, inf, inf.Kind())
+			if into.Name == otf.Name {
 				if inf.Type() == of.Type() {
 					switch inf.Kind() {
 					case reflect.String:
@@ -117,7 +121,31 @@ func (t *Transform) Transformer() error {
 					createdAt := t.setTime(inf, "UpdatedAt")
 					of.SetString(createdAt)
 				}
+			} else if len(names) > 1 {
+				if inf.Kind() == reflect.Ptr {
+					if into.Name == names[0] {
+						relation := inf.Elem().FieldByName(names[1])
+						switch relation.Kind() {
+						case reflect.String:
+							fmt.Printf("relation =》 %v relation.String() =》 %v ", relation, relation.String())
+							of.SetString(relation.String())
+						case reflect.Slice:
+							reflect.Copy(of, relation)
+						case reflect.Bool:
+							of.SetBool(relation.Bool())
+						case reflect.Float64, reflect.Float32:
+							of.SetFloat(relation.Float())
+						case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+							of.SetInt(relation.Int())
+						case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+							of.SetUint(relation.Uint())
+						default:
+							fmt.Printf("数据类型错误:%v,%v", relation.Kind(), relation)
+						}
+					}
+				}
 			}
+
 		}
 	}
 
