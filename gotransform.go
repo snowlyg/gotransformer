@@ -13,6 +13,11 @@ type Transform struct {
 	TimeFormat string
 }
 
+type Tag struct {
+	Key   string
+	Value string
+}
+
 func NewTransform(outObj, inObj interface{}, timeFormat string) *Transform {
 	return &Transform{
 		OutputObj:  outObj,
@@ -84,32 +89,14 @@ func (t *Transform) Transformer() error {
 			continue
 		}
 
-		tag := otf.Tag
-		name := tag.Get("gtf")
-		names := strings.Split(name, ".")
-
+		tag := t.getTag(otf)
 		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
 			inf := t.GetInsertValueElemField(iI)
 			into := t.GetInsertValueElemTypeField(iI)
 
 			if into.Name == otf.Name {
 				if inf.Type() == of.Type() {
-					switch inf.Kind() {
-					case reflect.String:
-						of.SetString(inf.String())
-					case reflect.Slice:
-						reflect.Copy(of, inf)
-					case reflect.Bool:
-						of.SetBool(inf.Bool())
-					case reflect.Float64, reflect.Float32:
-						of.SetFloat(inf.Float())
-					case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-						of.SetInt(inf.Int())
-					case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-						of.SetUint(inf.Uint())
-					default:
-						fmt.Printf("数据类型错误:%v,%v", inf.Kind(), inf)
-					}
+					t.setValue(inf, of)
 				}
 			} else if into.Name == "BaseModel" {
 				if otf.Name == "Id" {
@@ -121,32 +108,47 @@ func (t *Transform) Transformer() error {
 					createdAt := t.setTime(inf, "UpdatedAt")
 					of.SetString(createdAt)
 				}
-			} else if len(names) > 1 {
+			} else if tag != nil {
 				if inf.Kind() == reflect.Ptr {
-					if into.Name == names[0] {
-						relation := inf.Elem().FieldByName(names[1])
-						switch relation.Kind() {
-						case reflect.String:
-							fmt.Printf("relation =》 %v relation.String() =》 %v ", relation, relation.String())
-							of.SetString(relation.String())
-						case reflect.Slice:
-							reflect.Copy(of, relation)
-						case reflect.Bool:
-							of.SetBool(relation.Bool())
-						case reflect.Float64, reflect.Float32:
-							of.SetFloat(relation.Float())
-						case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-							of.SetInt(relation.Int())
-						case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-							of.SetUint(relation.Uint())
-						default:
-							fmt.Printf("数据类型错误:%v,%v", relation.Kind(), relation)
-						}
+					if into.Name == tag.Key {
+						relation := inf.Elem().FieldByName(tag.Value)
+						t.setValue(relation, of)
 					}
 				}
 			}
 
 		}
+	}
+
+	return nil
+}
+
+// set out value
+func (t *Transform) setValue(in reflect.Value, out reflect.Value) {
+	switch in.Kind() {
+	case reflect.String:
+		out.SetString(in.String())
+	case reflect.Slice:
+		reflect.Copy(out, in)
+	case reflect.Bool:
+		out.SetBool(in.Bool())
+	case reflect.Float64, reflect.Float32:
+		out.SetFloat(in.Float())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		out.SetInt(in.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		out.SetUint(in.Uint())
+	default:
+		fmt.Printf("数据类型错误:%v,%v", in.Kind(), in)
+	}
+}
+
+// get tag
+func (t *Transform) getTag(otf reflect.StructField) *Tag {
+	tag := otf.Tag.Get("gtf")
+	names := strings.Split(tag, ".")
+	if len(names) > 1 {
+		return &Tag{Key: names[0], Value: names[1]}
 	}
 
 	return nil
