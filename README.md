@@ -83,7 +83,7 @@ func main()  {
  
 简单关联关系格式化，使用 gtf 标识加`relationName.fieldName`
  
-```
+`````
 // 基础数据模型  beego/orm 
 type BaseModel struct {
 	Id        int64
@@ -111,4 +111,50 @@ type Response struct {
 }
 
 
-```
+`````
+
+## Func Example
+ 
+使用方法格式化，使用 gtf 标识加`Func.funcName`
+ 
+`````
+// 基础数据模型  beego/orm 
+type BaseModel struct {
+	Id        int64
+	CreatedAt time.Time `orm:"auto_now_add;type(datetime);column(created_at);type(timestamp)"`
+	UpdatedAt time.Time `orm:"auto_now;type(datetime);column(updated_at);type(timestamp)"`
+}
+
+// 数据模型
+type Model struct {
+	BaseModel
+	Name        string `orm:"column(Name);null" description:""`
+    Parent       *Resource   `orm:"null;rel(fk)"`      // RelForeignKey relation
+	Rmk          string    `orm:"column(rmk);size(255);null" description:""`
+	DeletedAt    time.Time `form:"-" orm:"column(deleted_at);type(timestamp);null" `
+}
+
+// 格式化数据
+type Response struct {
+	Id           int64
+    Value     string `gtf:"Func.GetValueEnd"`
+    Rmk          string
+	DeletedAt    string
+	CreatedAt    string
+	UpdatedAt    string
+}
+
+//  自定义方法
+func (r *Response) GetValueEnd(v string) string {
+	value := html.UnescapeString(v)
+	valueEnd := value[:len(value)-1]
+	if len(value) > 30 {
+		valueEnd = value[:30] + "..."
+	}
+
+	return valueEnd
+}
+
+
+
+`````

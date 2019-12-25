@@ -109,7 +109,11 @@ func (t *Transform) Transformer() error {
 					of.SetString(createdAt)
 				}
 			} else if tag != nil {
-				if inf.Kind() == reflect.Ptr {
+				if tag.Key == "Func" {
+					args := []reflect.Value{reflect.ValueOf(inf.String())}
+					rs := t.CallOutFunc(tag).Call(args)
+					of.SetString(rs[0].Interface().(string))
+				} else if inf.Kind() == reflect.Ptr {
 					if into.Name == tag.Key {
 						relation := inf.Elem().FieldByName(tag.Value)
 						t.setValue(relation, of)
@@ -121,6 +125,11 @@ func (t *Transform) Transformer() error {
 	}
 
 	return nil
+}
+
+// call out func
+func (t *Transform) CallOutFunc(tag *Tag) reflect.Value {
+	return t.GetOutputValue().MethodByName(tag.Value)
 }
 
 // set out value
@@ -156,9 +165,8 @@ func (t *Transform) getTag(otf reflect.StructField) *Tag {
 
 // time format
 func (t *Transform) setTime(inf reflect.Value, fieldName string) string {
-	format := inf.FieldByName(fieldName).MethodByName("Format")
-	m := []reflect.Value{reflect.ValueOf(t.TimeFormat)}
-	createdAt := format.Call(m)
-
-	return createdAt[0].Interface().(string)
+	args := []reflect.Value{reflect.ValueOf(t.TimeFormat)}
+	f := inf.FieldByName(fieldName).MethodByName("Format")
+	rs := f.Call(args)
+	return rs[0].Interface().(string)
 }
