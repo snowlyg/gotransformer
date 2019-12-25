@@ -77,17 +77,18 @@ func (t *Transform) Transformer() error {
 	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
 		of := t.GetOutputValueElemField(i)
 		otf := t.GetOutputValueElemTypeField(i)
-		// fmt.Sprintf("OutputType =》 %v , OutputValue => %v", otf, of)
+		// fmt.Printf("OutputType =》 %v , OutputValue => %v", otf, of)
 		if !t.GetOutputValueElem().CanSet() {
-			fmt.Sprintf("OutputType =》 %v , OutputValue => %v", otf, of)
+			fmt.Printf("OutputType =》 %v , OutputValue => %v", otf, of)
 			continue
 		}
 
 		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
 			inf := t.GetInsertValueElemField(iI)
 			into := t.GetInsertValueElemTypeField(iI)
-			// fmt.Sprintf("InsertType =》 %v , InsertValue => %v", into, inf)
+
 			if otf.Name == into.Name {
+				//fmt.Printf("InsertType =》 %v , InsertValue => %v, InsertValueKind => %v", into, inf, inf.Kind())
 				if inf.Type() == of.Type() {
 					switch inf.Kind() {
 					case reflect.String:
@@ -101,9 +102,8 @@ func (t *Transform) Transformer() error {
 					case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 						of.SetUint(inf.Uint())
 					default:
-						fmt.Sprintf("数据类型错误:%v,%v", inf.Kind(), inf)
+						fmt.Printf("数据类型错误:%v,%v", inf.Kind(), inf)
 					}
-
 				}
 			} else if into.Name == "BaseModel" {
 				if otf.Name == "Id" {
@@ -122,6 +122,7 @@ func (t *Transform) Transformer() error {
 	return nil
 }
 
+// time format
 func (t *Transform) setTime(inf reflect.Value, fieldName string) string {
 	format := inf.FieldByName(fieldName).MethodByName("Format")
 	m := []reflect.Value{reflect.ValueOf(t.TimeFormat)}
