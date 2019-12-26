@@ -86,7 +86,7 @@ func (t *Transform) Transformer() error {
 		otf := t.GetOutputValueElemTypeField(i)
 		// fmt.Printf("OutputType =》 %v , OutputValue => %v", otf, of)
 		if !t.GetOutputValueElem().CanSet() {
-			fmt.Printf("OutputType =》 %v , OutputValue => %v", otf, of)
+			fmt.Printf("OutputType =》 %v , OutputValue => %v  \n", otf, of)
 			continue
 		}
 
@@ -112,10 +112,15 @@ func (t *Transform) Transformer() error {
 				}
 
 				if tag.Key == "Func" && startFunc {
-					rs := t.CallOutFunc(tag).Call(args)
-					if rs[0].Interface() != nil {
-						of.SetString(rs[0].Interface().(string))
+					if tag.Value == "FormatTime" && into.Name == otf.Name { // 时间格式
+						of.SetString(t.setTime(inf, "", tag.Args))
+					} else {
+						rs := t.CallOutFunc(tag).Call(args)
+						if rs[0].Interface() != nil {
+							of.SetString(rs[0].Interface().(string))
+						}
 					}
+
 				} else if inf.Kind() == reflect.Ptr {
 					if into.Name == tag.Key {
 						relation := inf.Elem().FieldByName(tag.Value)
@@ -123,18 +128,18 @@ func (t *Transform) Transformer() error {
 					}
 				}
 			} else if into.Name == otf.Name {
+
 				if inf.Type() == of.Type() {
 					t.setValue(inf, of)
 				}
+
 			} else if into.Name == "BaseModel" {
 				if otf.Name == "Id" {
 					of.SetInt(inf.FieldByName("Id").Interface().(int64))
 				} else if otf.Name == "CreatedAt" {
-					createdAt := t.setTime(inf, "CreatedAt")
-					of.SetString(createdAt)
+					of.SetString(t.setTime(inf, "CreatedAt", nil))
 				} else if otf.Name == "UpdatedAt" {
-					createdAt := t.setTime(inf, "UpdatedAt")
-					of.SetString(createdAt)
+					of.SetString(t.setTime(inf, "UpdatedAt", nil))
 				}
 			}
 
@@ -165,7 +170,7 @@ func (t *Transform) setValue(in reflect.Value, out reflect.Value) {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		out.SetUint(in.Uint())
 	default:
-		fmt.Printf("数据类型错误:%v,%v", in.Kind(), in)
+		fmt.Printf("数据类型错误:%v,%v  \n", in.Kind(), in)
 	}
 }
 
@@ -194,9 +199,20 @@ func (t *Transform) getTag(otf reflect.StructField) *Tag {
 }
 
 // time format
-func (t *Transform) setTime(inf reflect.Value, fieldName string) string {
-	args := []reflect.Value{reflect.ValueOf(t.TimeFormat)}
-	f := inf.FieldByName(fieldName).MethodByName("Format")
+func (t *Transform) setTime(inf reflect.Value, fieldName string, targs []string) string {
+	if inf.IsZero() {
+		return ""
+	}
+	timeFormat := t.TimeFormat
+	if targs != nil && len(targs) == 1 && len(targs[0]) > 0 { // 自定义时间格式
+		timeFormat = targs[0]
+	}
+	args := []reflect.Value{reflect.ValueOf(timeFormat)}
+	if len(fieldName) > 0 { // CreatedAt ,UpdatedAt in BaseModel
+		inf = inf.FieldByName(fieldName)
+	}
+	f := inf.MethodByName("Format")
 	rs := f.Call(args)
+
 	return rs[0].Interface().(string)
 }
