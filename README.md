@@ -8,6 +8,9 @@
     <a href="https://github.com/snowlyg/gotransformer/blob/master/LICENSE"><img src="https://img.shields.io/github/license/snowlyg/gotransformer" alt="Licenses"></a>
 </p>
 
+#### Require
+- go 1.13.x
+
 #### 支持格式化方式
 - 简单格式化
 - 自定义方法格式化
