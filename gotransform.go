@@ -16,6 +16,7 @@ type Transform struct {
 type Tag struct {
 	Key   string
 	Value string
+	Args  []string
 }
 
 func NewTransform(outObj, inObj interface{}, timeFormat string) *Transform {
@@ -94,10 +95,27 @@ func (t *Transform) Transformer() error {
 			inf := t.GetInsertValueElemField(iI)
 			into := t.GetInsertValueElemTypeField(iI)
 			if tag != nil {
-				if tag.Key == "Func" && into.Name == otf.Name {
-					args := []reflect.Value{reflect.ValueOf(inf.String())}
+				var args []reflect.Value
+				startFunc := false      // 执行自定义方法
+				if len(tag.Args) == 1 { // 标签只定义了一个参数，则默认第一个参数为 inf.String()
+					args = []reflect.Value{reflect.ValueOf(inf.String()), reflect.ValueOf(tag.Args[0])} // append args,first arg is inf.string()
+					startFunc = into.Name == otf.Name
+				} else if len(tag.Args) > 1 { // 标签参数超过一个的时候，第一个参数为输入数据成员的名称
+					for vi, vt := range tag.Args {
+						if vi == 0 {
+							args = append(args, reflect.ValueOf(t.GetInsertValueElem().FieldByName(vt).String()))
+							startFunc = into.Name == vt
+						} else {
+							args = append(args, reflect.ValueOf(vt))
+						}
+					}
+				}
+
+				if tag.Key == "Func" && startFunc {
 					rs := t.CallOutFunc(tag).Call(args)
-					of.SetString(rs[0].Interface().(string))
+					if rs[0].Interface() != nil {
+						of.SetString(rs[0].Interface().(string))
+					}
 				} else if inf.Kind() == reflect.Ptr {
 					if into.Name == tag.Key {
 						relation := inf.Elem().FieldByName(tag.Value)
@@ -152,14 +170,27 @@ func (t *Transform) setValue(in reflect.Value, out reflect.Value) {
 }
 
 // get tag
+// first arg is insert object self
 func (t *Transform) getTag(otf reflect.StructField) *Tag {
 	tag := otf.Tag.Get("gtf")
-	names := strings.Split(tag, ".")
-	if len(names) > 1 {
+	rtag := strings.Replace(tag, ")", "", 1)
+	names := strings.Split(rtag, ".")
+	if len(names) <= 1 { // no func name
+		return nil
+	}
+
+	if !strings.Contains(names[1], "(") { // no args
 		return &Tag{Key: names[0], Value: names[1]}
 	}
 
-	return nil
+	arg := strings.Split(names[1], "(")
+	if len(arg) == 1 { // no args
+		return &Tag{Key: names[0], Value: arg[0]}
+	}
+
+	args := strings.Split(arg[1], ",") // all args
+	return &Tag{Key: names[0], Value: arg[0], Args: args}
+
 }
 
 // time format
