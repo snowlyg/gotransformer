@@ -92,11 +92,13 @@ func (t *Transform) Transformer() error {
 		}
 
 		tag := t.getTag(otf)
+		tagFiledName := ""
 		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
 			inf := t.GetInsertValueElemField(iI)
 			into := t.GetInsertValueElemTypeField(iI)
 			if tag != nil {
 				var args []reflect.Value
+				tagFiledName = tag.FiledName
 				startFunc := false
 				// 执行自定义方法
 				if len(tag.FiledName) < 1 { // 标签只定义了一个参数，则默认第一个参数为 inf.String()
@@ -109,34 +111,46 @@ func (t *Transform) Transformer() error {
 						args = append(args, reflect.ValueOf(vt))
 					}
 				}
+
 				if tag.Key == "Func" && startFunc {
-					if tag.Value == "FormatTime" && into.Name == otf.Name { // 时间格式
-						of.SetString(t.setTime(inf, "", tag.FiledName))
-					} else {
-						rs := t.CallOutFunc(tag).Call(args)
-						if rs[0].Interface() != nil {
-							of.SetString(rs[0].Interface().(string))
-						}
+					rs := t.CallOutFunc(tag).Call(args)
+					if rs[0].Interface() != nil {
+						of.SetString(rs[0].Interface().(string))
+						continue
 					}
-				} else if inf.Kind() == reflect.Ptr {
+				}
+
+				if inf.Kind() == reflect.Ptr {
 					if into.Name == tag.Key {
 						relation := inf.Elem().FieldByName(tag.Value)
 						t.setValue(relation, of)
+						continue
 					}
 				}
-			} else if into.Name == otf.Name {
+			}
+
+			if into.Name == otf.Name {
+				if into.Type.Name() == "Time" {
+					of.SetString(t.setTime(inf, "", tagFiledName))
+					continue
+				}
 
 				if inf.Type() == of.Type() {
 					t.setValue(inf, of)
+					continue
 				}
+			}
 
-			} else if into.Name == "BaseModel" {
+			if into.Name == "BaseModel" {
 				if otf.Name == "Id" {
 					of.SetInt(inf.FieldByName("Id").Interface().(int64))
+					continue
 				} else if otf.Name == "CreatedAt" {
-					of.SetString(t.setTime(inf, "CreatedAt", ""))
+					of.SetString(t.setTime(inf, "CreatedAt", tagFiledName))
+					continue
 				} else if otf.Name == "UpdatedAt" {
-					of.SetString(t.setTime(inf, "UpdatedAt", ""))
+					of.SetString(t.setTime(inf, "UpdatedAt", tagFiledName))
+					continue
 				}
 			}
 

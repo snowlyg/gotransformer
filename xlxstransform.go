@@ -10,20 +10,22 @@ import (
 )
 
 type XlxsTransform struct {
-	OutputObj interface{}
-	Title     map[string]string
-	Row       []string
-	ExcelName string
-	File      *excelize.File
+	OutputObj  interface{}
+	Title      map[string]string
+	Row        []string
+	ExcelName  string
+	File       *excelize.File
+	TimeFormat string
 }
 
-func NewXlxsTransform(outObj interface{}, title map[string]string, row []string, excelName string, file *excelize.File) *XlxsTransform {
+func NewXlxsTransform(outObj interface{}, title map[string]string, row []string, excelName, timeFormat string, file *excelize.File) *XlxsTransform {
 	return &XlxsTransform{
-		OutputObj: outObj,
-		Title:     title,
-		Row:       row,
-		ExcelName: excelName,
-		File:      file,
+		OutputObj:  outObj,
+		Title:      title,
+		Row:        row,
+		ExcelName:  excelName,
+		File:       file,
+		TimeFormat: timeFormat,
 	}
 }
 
@@ -78,8 +80,18 @@ func (t *XlxsTransform) XlxsTransformer() error {
 						of.SetInt(int64(atob))
 					case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 						// cf.SetUint()
+					case reflect.Struct:
+						if otf.Type.Name() == "Time" {
+							if len(t.Row[rI]) > 0 {
+								objV, err := t.parseTime(t.Row[rI])
+								if err != nil {
+									fmt.Printf("Parse:%v,%v,%v \n", err, t.Row[rI], otf.Name)
+								}
+								of.Set(reflect.ValueOf(objV))
+							}
+						}
 					default:
-						fmt.Printf("数据类型错误:%v,%v", of.Kind(), of)
+						fmt.Printf("数据类型错误:%v \n", otf.Name)
 					}
 				} else {
 					continue
@@ -96,9 +108,7 @@ func (t *XlxsTransform) XlxsCellTransformer() error {
 	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
 		of := t.GetOutputValueElemField(i)
 		otf := t.GetOutputValueElemTypeField(i)
-
 		for iw, v := range t.Title {
-
 			if iw == otf.Name {
 				cell, err := t.GetExcelCell(v)
 				if err != nil {
@@ -112,7 +122,7 @@ func (t *XlxsTransform) XlxsCellTransformer() error {
 					if len(cell) > 0 {
 						objV, err := strconv.ParseFloat(cell, 64)
 						if err != nil {
-							fmt.Printf("Parse:%v,%v,%v", err, cell, otf.Name)
+							fmt.Printf("Parse:%v,%v,%v \n", err, cell, otf.Name)
 						}
 						of.SetFloat(objV)
 					}
@@ -120,7 +130,7 @@ func (t *XlxsTransform) XlxsCellTransformer() error {
 					if len(cell) > 0 {
 						objV, err := strconv.Atoi(cell)
 						if err != nil {
-							fmt.Printf("Parse:%v,%v,%v", err, cell, otf.Name)
+							fmt.Printf("Parse:%v,%v,%v \n", err, cell, otf.Name)
 						}
 						of.SetInt(int64(objV))
 					}
@@ -128,26 +138,37 @@ func (t *XlxsTransform) XlxsCellTransformer() error {
 					reflect.ValueOf(cell)
 					objV, err := strconv.ParseUint(v, 0, 64)
 					if err != nil {
-						fmt.Printf("Parse:%v,%v,%v", err, cell, otf.Name)
+						fmt.Printf("Parse:%v,%v,%v \n", err, cell, otf.Name)
 					}
 					of.SetUint(objV)
 				case reflect.Struct:
-					if len(cell) > 0 {
-						objV, err := time.Parse("20060102", cell)
-						if err != nil {
-							fmt.Printf("Parse:%v,%v,%v", err, cell, otf.Name)
+					if otf.Type.Name() == "Time" {
+						if len(cell) > 0 {
+							objV, err := t.parseTime(cell)
+							if err != nil {
+								fmt.Printf("Parse:%v,%v,%v \n", err, cell, otf.Name)
+							}
+							of.Set(reflect.ValueOf(objV))
 						}
-						of.Set(reflect.ValueOf(objV))
 					}
 
 				default:
-					fmt.Printf("未知类型:%v,%v", cell, otf.Name)
+					fmt.Printf("未知类型:%v,%v \n", cell, otf.Name)
 				}
 			}
 		}
 	}
 
 	return nil
+}
+
+// 格式化时间
+func (t *XlxsTransform) parseTime(cell string) (time.Time, error) {
+	format := "20060102"
+	if len(t.TimeFormat) > 0 {
+		format = t.TimeFormat
+	}
+	return time.Parse(format, cell)
 }
 
 // 导入基础参数 Cell 文件内容
