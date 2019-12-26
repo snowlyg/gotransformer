@@ -90,7 +90,7 @@ func (r *Response) GetValueEnd(v,s string) string {
 
 ```
 
-1.使用带参数方法格式化(多个参数)，使用 gtf 标识加`Func.funcName(arg1,arg2,arg3)`
+2.使用带参数方法格式化(多个参数)，使用 gtf 标识加`Func.funcName(arg1,arg2,arg3)`
 - 当有多个参数时候，自定义方法的第一个参数为需要转换数据的键名称
  
 ```
@@ -134,5 +134,37 @@ func (r *Response) GetValueEnd(v,s1,s2 string) string {
 	return valueEnd
 }
 
+```
+
+
+3.时间数据格式，使用 gtf 标识加 `Func.FormatTime(arg)`
+- 时间数据格式不需要写自定义方法，直接使用标识 `gtf:"Func.FormatTime()"`，`gtf:"Func.FormatTime("2006-01-02 15:04:05")"`
+- 参数为可选，为空是使用 `gotransform.NewTransform(&response, model, time.RFC3339)` 定义的时间格式
+ 
+```
+// 基础数据模型  beego/orm 
+type BaseModel struct {
+	Id        int64
+	CreatedAt time.Time `orm:"auto_now_add;type(datetime);column(created_at);type(timestamp)"`
+	UpdatedAt time.Time `orm:"auto_now;type(datetime);column(updated_at);type(timestamp)"`
+}
+
+// 数据模型
+type Model struct {
+	BaseModel
+	Time        time.Time `form:"-" orm:"column(Time);type(timestamp);null" `
+	Time1       time.Tim   `form:"-" orm:"column(Time1);type(timestamp);null" `
+	DeletedAt   time.Time `form:"-" orm:"column(deleted_at);type(timestamp);null" `
+}
+
+// 格式化数据
+type Response struct {
+	Id           int64
+    Time         string `gtf:"Func.FormatTime("2006-01-02 15:04:05")"`
+    Time1        string `gtf:"Func.FormatTime()"`
+	DeletedAt    string
+	CreatedAt    string
+	UpdatedAt    string
+}
 ```
 
