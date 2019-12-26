@@ -90,7 +90,6 @@ func main()  {
 ```
 
 ## Simple Relation Example
- 
 简单关联关系格式化，使用 gtf 标识加`relationName.fieldName`
  
 ```
@@ -105,9 +104,14 @@ type BaseModel struct {
 type Model struct {
 	BaseModel
 	Name        string `orm:"column(Name);null" description:""`
-    Parent       *Resource   `orm:"null;rel(fk)"`      // RelForeignKey relation
+    Parent       *Parent   `orm:"null;rel(fk)"`      // RelForeignKey relation
 	Rmk          string    `orm:"column(rmk);size(255);null" description:""`
 	DeletedAt    time.Time `form:"-" orm:"column(deleted_at);type(timestamp);null" `
+}
+
+type Parent struct {
+	BaseModel
+	Name        string `orm:"column(Name);null" description:""`
 }
 
 // 格式化数据
@@ -120,6 +124,52 @@ type Response struct {
 	UpdatedAt    string
 }
 
+
+```
+
+## One To More Relation Example
+一对多关联关系格式化，使用 gtf 标识加`Func.FormatTime(arg)`,参数为关联关系名称
+ 
+```
+// 基础数据模型  beego/orm 
+type BaseModel struct {
+	Id        int64
+	CreatedAt time.Time `orm:"auto_now_add;type(datetime);column(created_at);type(timestamp)"`
+	UpdatedAt time.Time `orm:"auto_now;type(datetime);column(updated_at);type(timestamp)"`
+}
+
+// 数据模型
+type Model struct {
+	BaseModel
+	Name        string `orm:"column(Name);null" description:""`
+    Parents      []*Parent   `orm:"null;rel(fk)"`      // RelForeignKey relation
+	Rmk          string    `orm:"column(rmk);size(255);null" description:""`
+	DeletedAt    time.Time `form:"-" orm:"column(deleted_at);type(timestamp);null" `
+}
+
+// 数据模型
+type Parent struct {
+	BaseModel
+	Name        string `orm:"column(Name);null" description:""`
+}
+
+// 格式化数据
+type Response struct {
+	Id           int64
+	ParentName   string `gtf:"Func.FormatTime(Parents)"`
+    Rmk          string
+	DeletedAt    string
+	CreatedAt    string
+	UpdatedAt    string
+}
+
+func (r *Response) GetAdminName(vs []*models.Parent) string {
+	for _, v := range vs {
+		//...
+	}
+
+	return ""
+}
 
 ```
 

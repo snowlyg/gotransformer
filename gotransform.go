@@ -104,7 +104,7 @@ func (t *Transform) Transformer() error {
 					startFunc = into.Name == otf.Name
 				} else {
 					startFunc = into.Name == tag.FiledName
-					args = append(args, reflect.ValueOf(t.GetInsertValueElem().FieldByName(tag.FiledName)))
+					args = append(args, t.GetInsertValueElem().FieldByName(tag.FiledName))
 					for _, vt := range tag.Args {
 						args = append(args, reflect.ValueOf(vt))
 					}

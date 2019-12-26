@@ -3,8 +3,7 @@
 `提示：反射函数调用会损耗性能不建议大量使用`
  
 ### Simple Func Example
-简单使用自定义方法格式化，使用 gtf 标识加`Func.funcName`
- 
+简单使用自定义方法格式化，使用 gtf 标识加`Func.funcName()`，默认第一个参数为转换数据本身
 ```
 // 基础数据模型  beego/orm 
 type BaseModel struct {
@@ -70,7 +69,7 @@ type Model struct {
 // 格式化数据
 type Response struct {
 	Id           int64
-    Value     string `gtf:"Func.GetValueEnd(格式化数据)"`
+    Value        string `gtf:"Func.GetValueEnd(格式化数据)"`
     Rmk          string
 	DeletedAt    string
 	CreatedAt    string
@@ -78,7 +77,7 @@ type Response struct {
 }
 
 //  自定义方法
-func (r *Response) GetValueEnd(v,s string) string {
+func (r *Response) GetValueEnd(v string) string {
     // v 相当于 r.Value 的值
     // s 等于 “格式化数据”
 	value := html.UnescapeString(v)
