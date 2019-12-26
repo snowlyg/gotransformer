@@ -1,4 +1,6 @@
 ## Func Example
+
+`提示：反射函数调用会损耗性能不建议大量使用`
  
 ### Simple Func Example
 简单使用自定义方法格式化，使用 gtf 标识加`Func.funcName`

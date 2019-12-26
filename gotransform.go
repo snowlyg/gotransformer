@@ -14,9 +14,10 @@ type Transform struct {
 }
 
 type Tag struct {
-	Key   string
-	Value string
-	Args  []string
+	Key       string
+	Value     string
+	FiledName string
+	Args      []string
 }
 
 func NewTransform(outObj, inObj interface{}, timeFormat string) *Transform {
@@ -96,31 +97,27 @@ func (t *Transform) Transformer() error {
 			into := t.GetInsertValueElemTypeField(iI)
 			if tag != nil {
 				var args []reflect.Value
-				startFunc := false      // 执行自定义方法
-				if len(tag.Args) == 1 { // 标签只定义了一个参数，则默认第一个参数为 inf.String()
-					args = []reflect.Value{reflect.ValueOf(inf.String()), reflect.ValueOf(tag.Args[0])} // append args,first arg is inf.string()
+				startFunc := false
+				// 执行自定义方法
+				if len(tag.FiledName) < 1 { // 标签只定义了一个参数，则默认第一个参数为 inf.String()
+					args = []reflect.Value{reflect.ValueOf(inf.String())} // append args,first arg is inf.string()
 					startFunc = into.Name == otf.Name
-				} else if len(tag.Args) > 1 { // 标签参数超过一个的时候，第一个参数为输入数据成员的名称
-					for vi, vt := range tag.Args {
-						if vi == 0 {
-							args = append(args, reflect.ValueOf(t.GetInsertValueElem().FieldByName(vt).String()))
-							startFunc = into.Name == vt
-						} else {
-							args = append(args, reflect.ValueOf(vt))
-						}
+				} else {
+					startFunc = into.Name == tag.FiledName
+					args = append(args, reflect.ValueOf(t.GetInsertValueElem().FieldByName(tag.FiledName)))
+					for _, vt := range tag.Args {
+						args = append(args, reflect.ValueOf(vt))
 					}
 				}
-
 				if tag.Key == "Func" && startFunc {
 					if tag.Value == "FormatTime" && into.Name == otf.Name { // 时间格式
-						of.SetString(t.setTime(inf, "", tag.Args))
+						of.SetString(t.setTime(inf, "", tag.FiledName))
 					} else {
 						rs := t.CallOutFunc(tag).Call(args)
 						if rs[0].Interface() != nil {
 							of.SetString(rs[0].Interface().(string))
 						}
 					}
-
 				} else if inf.Kind() == reflect.Ptr {
 					if into.Name == tag.Key {
 						relation := inf.Elem().FieldByName(tag.Value)
@@ -137,9 +134,9 @@ func (t *Transform) Transformer() error {
 				if otf.Name == "Id" {
 					of.SetInt(inf.FieldByName("Id").Interface().(int64))
 				} else if otf.Name == "CreatedAt" {
-					of.SetString(t.setTime(inf, "CreatedAt", nil))
+					of.SetString(t.setTime(inf, "CreatedAt", ""))
 				} else if otf.Name == "UpdatedAt" {
-					of.SetString(t.setTime(inf, "UpdatedAt", nil))
+					of.SetString(t.setTime(inf, "UpdatedAt", ""))
 				}
 			}
 
@@ -194,18 +191,22 @@ func (t *Transform) getTag(otf reflect.StructField) *Tag {
 	}
 
 	args := strings.Split(arg[1], ",") // all args
-	return &Tag{Key: names[0], Value: arg[0], Args: args}
+	if len(args) == 1 {
+		return &Tag{Key: names[0], Value: arg[0], FiledName: args[0]}
+	}
+
+	return &Tag{Key: names[0], Value: arg[0], FiledName: args[0], Args: args[1:]}
 
 }
 
 // time format
-func (t *Transform) setTime(inf reflect.Value, fieldName string, targs []string) string {
+func (t *Transform) setTime(inf reflect.Value, fieldName string, timeFormat string) string {
+
 	if inf.IsZero() {
 		return ""
 	}
-	timeFormat := t.TimeFormat
-	if targs != nil && len(targs) == 1 && len(targs[0]) > 0 { // 自定义时间格式
-		timeFormat = targs[0]
+	if len(timeFormat) < 1 { // 自定义时间格式
+		timeFormat = t.TimeFormat
 	}
 	args := []reflect.Value{reflect.ValueOf(timeFormat)}
 	if len(fieldName) > 0 { // CreatedAt ,UpdatedAt in BaseModel
