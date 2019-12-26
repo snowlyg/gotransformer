@@ -136,36 +136,3 @@ func (r *Response) GetValueEnd(v,s1,s2 string) string {
 }
 
 ```
-
-
-3.时间数据格式，使用 gtf 标识加 `Func.FormatTime(arg)`
-- 时间数据格式不需要写自定义方法，直接使用标识 `gtf:"Func.FormatTime()"`，`gtf:"Func.FormatTime("2006-01-02 15:04:05")"`
-- 参数为可选，为空是使用 `gotransform.NewTransform(&response, model, time.RFC3339)` 定义的时间格式
- 
-```
-// 基础数据模型  beego/orm 
-type BaseModel struct {
-	Id        int64
-	CreatedAt time.Time `orm:"auto_now_add;type(datetime);column(created_at);type(timestamp)"`
-	UpdatedAt time.Time `orm:"auto_now;type(datetime);column(updated_at);type(timestamp)"`
-}
-
-// 数据模型
-type Model struct {
-	BaseModel
-	Time        time.Time `form:"-" orm:"column(Time);type(timestamp);null" `
-	Time1       time.Tim   `form:"-" orm:"column(Time1);type(timestamp);null" `
-	DeletedAt   time.Time `form:"-" orm:"column(deleted_at);type(timestamp);null" `
-}
-
-// 格式化数据
-type Response struct {
-	Id           int64
-    Time         string `gtf:"Func.FormatTime("2006-01-02 15:04:05")"`
-    Time1        string `gtf:"Func.FormatTime()"`
-	DeletedAt    string
-	CreatedAt    string
-	UpdatedAt    string
-}
-```
-

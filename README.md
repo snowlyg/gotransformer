@@ -173,6 +173,39 @@ func (r *Response) GetAdminName(vs []*models.Parent) string {
 
 ```
 
+## 时间数据格式化
+- 根据数据模型类型 time.Time 自动格式化，
+- 默认使用 `gotransform.NewTransform(&response, model, time.RFC3339)` 定义的时间格式
+- 自定义时间格式 使用标识 `gtf:"Time.2006-01-02 15:04:05"`
+ 
+```
+// 基础数据模型  beego/orm 
+type BaseModel struct {
+	Id        int64
+	CreatedAt time.Time `orm:"auto_now_add;type(datetime);column(created_at);type(timestamp)"`
+	UpdatedAt time.Time `orm:"auto_now;type(datetime);column(updated_at);type(timestamp)"`
+}
+
+// 数据模型
+type Model struct {
+	BaseModel
+	Time        time.Time `form:"-" orm:"column(Time);type(timestamp);null" `
+	Time1       time.Tim   `form:"-" orm:"column(Time1);type(timestamp);null" `
+	DeletedAt   time.Time `form:"-" orm:"column(deleted_at);type(timestamp);null" `
+}
+
+// 格式化数据
+type Response struct {
+	Id           int64
+    Time         string `gtf:"Time.2006-01-02 15:04:05"`
+    Time1        string 
+	DeletedAt    string
+	CreatedAt    string
+	UpdatedAt    string
+}
+```
+
+
 ## Func Example
 
 [Func Example](FUNC.md)

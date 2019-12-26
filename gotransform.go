@@ -92,13 +92,17 @@ func (t *Transform) Transformer() error {
 		}
 
 		tag := t.getTag(otf)
-		tagFiledName := ""
+		timeFormat := ""
 		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
 			inf := t.GetInsertValueElemField(iI)
 			into := t.GetInsertValueElemTypeField(iI)
 			if tag != nil {
+
+				if tag.Key == "Time" {
+					timeFormat = tag.Value
+				}
+
 				var args []reflect.Value
-				tagFiledName = tag.FiledName
 				startFunc := false
 				// 执行自定义方法
 				if len(tag.FiledName) < 1 { // 标签只定义了一个参数，则默认第一个参数为 inf.String()
@@ -131,7 +135,7 @@ func (t *Transform) Transformer() error {
 
 			if into.Name == otf.Name {
 				if into.Type.Name() == "Time" {
-					of.SetString(t.setTime(inf, "", tagFiledName))
+					of.SetString(t.setTime(inf, "", timeFormat))
 					continue
 				}
 
@@ -146,10 +150,10 @@ func (t *Transform) Transformer() error {
 					of.SetInt(inf.FieldByName("Id").Interface().(int64))
 					continue
 				} else if otf.Name == "CreatedAt" {
-					of.SetString(t.setTime(inf, "CreatedAt", tagFiledName))
+					of.SetString(t.setTime(inf, "CreatedAt", timeFormat))
 					continue
 				} else if otf.Name == "UpdatedAt" {
-					of.SetString(t.setTime(inf, "UpdatedAt", tagFiledName))
+					of.SetString(t.setTime(inf, "UpdatedAt", timeFormat))
 					continue
 				}
 			}
