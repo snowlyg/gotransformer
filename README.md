@@ -8,6 +8,13 @@
     <a href="https://github.com/snowlyg/gotransformer/blob/master/LICENSE"><img src="https://img.shields.io/github/license/snowlyg/gotransformer" alt="Licenses"></a>
 </p>
 
+#### 支持格式化方式
+- 简单格式化
+- 自定义方法格式化
+- 关联数据格式化
+- 时间数据格式化
+- excel 导入数据格式化
+
 golang 简单实现接口数据格式化
 
 ## Example
