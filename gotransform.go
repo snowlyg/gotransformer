@@ -342,7 +342,7 @@ func (t *Transform) getMapValueB(in reflect.Value) bool {
 	inTypeKind := in.Elem().Type().Kind()
 	switch inTypeKind {
 	case reflect.String:
-		if len(in.String()) > 0 {
+		if len(in.Interface().(string)) > 0 {
 			return true
 		} else {
 			return false
@@ -379,7 +379,7 @@ func (t *Transform) getMapValueF(in reflect.Value) float64 {
 	inTypeKind := in.Elem().Type().Kind()
 	switch inTypeKind {
 	case reflect.String:
-		f, _ := strconv.ParseFloat(in.String(), 64)
+		f, _ := strconv.ParseFloat(in.Interface().(string), 64)
 		return f
 	case reflect.Float64, reflect.Float32:
 		return in.Float()
@@ -398,7 +398,7 @@ func (t *Transform) getMapValueI(in reflect.Value) int64 {
 	inTypeKind := in.Elem().Type().Kind()
 	switch inTypeKind {
 	case reflect.String:
-		i, _ := strconv.Atoi(in.String())
+		i, _ := strconv.Atoi(in.Interface().(string))
 		return int64(i)
 	case reflect.Bool:
 		if in.Bool() {
@@ -424,7 +424,7 @@ func (t *Transform) getMapValueU(in reflect.Value) uint64 {
 	inTypeKind := in.Elem().Type().Kind()
 	switch inTypeKind {
 	case reflect.String:
-		i, _ := strconv.ParseUint(in.String(), 10, 64)
+		i, _ := strconv.ParseUint(in.Interface().(string), 10, 64)
 		return i
 	case reflect.Bool:
 		if in.Bool() {
