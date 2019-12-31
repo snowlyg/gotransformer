@@ -16,6 +16,7 @@
 - 自定义方法格式化
 - 关联数据格式化
 - 时间数据格式化
+- map数据格式化
 - excel 导入数据格式化
 
 
@@ -59,6 +60,7 @@ type Response struct {
 
 
 func main()  {
+    // struct
     response := Response{}
     baseModel := BaseModel{1,time.Now(),time.Now()}
     model := Model{baseModel,"name","remark",time.Now()}
@@ -207,10 +209,11 @@ type Response struct {
 
 
 ## Func Example
-
 [Func Example](FUNC.md)
+
+## Map Example
+[Map Example](MAP.md)
 
  
 ## Excel 导入数据转换
-
 [Excel 导入数据转换](XLSX.md)
