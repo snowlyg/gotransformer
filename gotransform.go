@@ -214,20 +214,20 @@ func (t *Transform) transformerMap() {
 				startFunc := false
 				// 执行自定义方法
 				if len(tag.FiledName) < 1 { // 标签只定义了一个参数，则默认第一个参数为 inf.String()
-					args = []reflect.Value{reflect.ValueOf(inf.String())} // append args,first arg is inf.string()
+					args = []reflect.Value{reflect.ValueOf(inf.Interface().(string))} // append args,first arg is inf.string()
 					startFunc = keyName == otf.Name
-				} else {
-					startFunc = keyName == tag.FiledName
-					args = append(args, t.GetInsertValueElem().FieldByName(tag.FiledName))
-					for _, vt := range tag.Args {
-						args = append(args, reflect.ValueOf(vt))
-					}
 				}
+				//else {
+				//	startFunc = keyName == tag.FiledName
+				//	args = append(args, t.GetInsertValueElem().FieldByName(tag.FiledName))
+				//	for _, vt := range tag.Args {
+				//		args = append(args, reflect.ValueOf(vt))
+				//	}
+				//}
 
 				if tag.Key == "Func" && startFunc {
 					rs := t.CallOutFunc(tag).Call(args)
 					if rs[0].Interface() != nil {
-						fmt.Printf("tag:%v, %v \n", tag, args)
 						of.SetString(rs[0].Interface().(string))
 						continue
 					}
@@ -317,7 +317,7 @@ func (t *Transform) getMapValueS(in reflect.Value) string {
 	inTypeKind := in.Elem().Type().Kind()
 	switch inTypeKind {
 	case reflect.String:
-		return in.String()
+		return in.Interface().(string)
 	case reflect.Bool:
 		if in.Bool() {
 			return "1"
