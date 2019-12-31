@@ -118,10 +118,11 @@ func (t *Transform) transformerPtr() {
 	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
 		of := t.GetOutputValueElemField(i)
 		otf := t.GetOutputValueElemTypeField(i)
-		if !t.GetOutputValueElem().CanSet() {
-			fmt.Printf("OutputType =》 %v , OutputValue => %v  \n", otf, of)
+		if !of.CanSet() {
+			fmt.Printf("%v:不能被修改 \n", otf.Name)
 			continue
 		}
+
 		tag := t.getTag(otf)
 		timeFormat := ""
 		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
@@ -193,20 +194,17 @@ func (t *Transform) transformerMap() {
 	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
 		of := t.GetOutputValueElemField(i)
 		otf := t.GetOutputValueElemTypeField(i)
-		if !t.GetOutputValueElem().CanSet() {
-			fmt.Printf("OutputType =》 %v , OutputValue => %v  \n", otf, of)
+		if !of.CanSet() {
+			fmt.Printf("%v:不能被修改 \n", otf.Name)
 			continue
 		}
+
 		tag := t.getTag(otf)
 		timeFormat := ""
 
 		for _, k := range t.GetInsertMapKeys() {
 			inf := t.GetInsertMapValue(k)
 			keyName := k.String()
-			if !of.CanSet() {
-				fmt.Printf("keyName:不能被修改 %v \n", keyName)
-				continue
-			}
 
 			if tag != nil {
 				if tag.Key == "Time" {
