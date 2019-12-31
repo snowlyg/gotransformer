@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -201,7 +202,6 @@ func (t *Transform) transformerMap() {
 
 		tag := t.getTag(otf)
 		timeFormat := ""
-
 		for _, k := range t.GetInsertMapKeys() {
 			inf := t.GetInsertMapValue(k)
 			keyName := k.String()
@@ -223,21 +223,20 @@ func (t *Transform) transformerMap() {
 						args = append(args, reflect.ValueOf(vt))
 					}
 				}
+
 				if tag.Key == "Func" && startFunc {
 					rs := t.CallOutFunc(tag).Call(args)
 					if rs[0].Interface() != nil {
-
+						fmt.Printf("tag:%v, %v \n", tag, args)
 						of.SetString(rs[0].Interface().(string))
 						continue
 					}
 				}
 
-				if inf.Kind() == reflect.Ptr {
-					if keyName == tag.Key {
-						relation := inf.Elem().FieldByName(tag.Value)
-						t.setValue(relation, of)
-						continue
-					}
+				if keyName == tag.Key {
+					relation := inf.Elem().FieldByName(tag.Value)
+					t.setMapValue(relation, of)
+					continue
 				}
 			}
 
@@ -247,10 +246,8 @@ func (t *Transform) transformerMap() {
 					continue
 				}
 
-				if inf.Type() == of.Type() {
-					t.setValue(inf, of)
-					continue
-				}
+				t.setMapValue(inf, of)
+				continue
 			}
 
 			//if keyName == "BaseModel" {
@@ -276,10 +273,10 @@ func (t *Transform) CallOutFunc(tag *Tag) reflect.Value {
 }
 
 // set out value
-func (t *Transform) setValue(in reflect.Value, out reflect.Value) {
-	switch in.Kind() {
+func (t *Transform) setValue(in, out reflect.Value) {
+	switch out.Kind() {
 	case reflect.String:
-		out.SetString(in.String())
+		out.SetString(in.Interface().(string))
 	case reflect.Slice:
 		reflect.Copy(out, in)
 	case reflect.Bool:
@@ -293,6 +290,159 @@ func (t *Transform) setValue(in reflect.Value, out reflect.Value) {
 	default:
 		fmt.Printf("数据类型错误:%v,%v  \n", in.Kind(), in)
 	}
+}
+
+// set out map value
+func (t *Transform) setMapValue(in, out reflect.Value) {
+	switch out.Kind() {
+	case reflect.String:
+		out.SetString(t.getMapValueS(in))
+	case reflect.Slice:
+		reflect.Copy(out, in)
+	case reflect.Bool:
+		out.SetBool(t.getMapValueB(in))
+	case reflect.Float64, reflect.Float32:
+		out.SetFloat(t.getMapValueF(in))
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		out.SetInt(t.getMapValueI(in))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		out.SetUint(t.getMapValueU(in))
+	default:
+		fmt.Printf("数据类型错误:%v,%v  \n", in.Kind(), in)
+	}
+}
+
+// transform map data
+func (t *Transform) getMapValueS(in reflect.Value) string {
+	inTypeKind := in.Elem().Type().Kind()
+	switch inTypeKind {
+	case reflect.String:
+		return in.String()
+	case reflect.Bool:
+		if in.Bool() {
+			return "1"
+		} else {
+			return "0"
+		}
+	case reflect.Float64, reflect.Float32:
+		return strconv.FormatFloat(in.Float(), 'e', 0, 64)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(in.Int(), 10)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return strconv.FormatUint(in.Uint(), 10)
+	default:
+		fmt.Printf("数据类型错误:%v,%v  \n", in.Kind(), in)
+		return ""
+	}
+
+}
+
+// transform map data
+func (t *Transform) getMapValueB(in reflect.Value) bool {
+	inTypeKind := in.Elem().Type().Kind()
+	switch inTypeKind {
+	case reflect.String:
+		if len(in.String()) > 0 {
+			return true
+		} else {
+			return false
+		}
+	case reflect.Bool:
+		return in.Bool()
+	case reflect.Float64, reflect.Float32:
+		if in.Float() > 0 {
+			return true
+		} else {
+			return false
+		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		if in.Int() > 0 {
+			return true
+		} else {
+			return false
+		}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		if in.Uint() > 0 {
+			return true
+		} else {
+			return false
+		}
+	default:
+		fmt.Printf("数据类型错误:%v,%v  \n", in.Kind(), in)
+		return false
+	}
+
+}
+
+// transform map data
+func (t *Transform) getMapValueF(in reflect.Value) float64 {
+	inTypeKind := in.Elem().Type().Kind()
+	switch inTypeKind {
+	case reflect.String:
+		f, _ := strconv.ParseFloat(in.String(), 64)
+		return f
+	case reflect.Float64, reflect.Float32:
+		return in.Float()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return float64(in.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return float64(in.Uint())
+	default:
+		fmt.Printf("数据类型错误:%v,%v  \n", in.Kind(), in)
+		return 0
+	}
+}
+
+// transform map data
+func (t *Transform) getMapValueI(in reflect.Value) int64 {
+	inTypeKind := in.Elem().Type().Kind()
+	switch inTypeKind {
+	case reflect.String:
+		i, _ := strconv.Atoi(in.String())
+		return int64(i)
+	case reflect.Bool:
+		if in.Bool() {
+			return 1
+		} else {
+			return 0
+		}
+	case reflect.Float64, reflect.Float32:
+		return int64(in.Float())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return in.Int()
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return int64(in.Uint())
+	default:
+		fmt.Printf("数据类型错误:%v,%v  \n", in.Kind(), in)
+		return 0
+	}
+
+}
+
+// transform map data
+func (t *Transform) getMapValueU(in reflect.Value) uint64 {
+	inTypeKind := in.Elem().Type().Kind()
+	switch inTypeKind {
+	case reflect.String:
+		i, _ := strconv.ParseUint(in.String(), 10, 64)
+		return i
+	case reflect.Bool:
+		if in.Bool() {
+			return 1
+		} else {
+			return 0
+		}
+	case reflect.Float64, reflect.Float32:
+		return uint64(in.Float())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return uint64(in.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return in.Uint()
+	default:
+		fmt.Printf("数据类型错误:%v,%v  \n", in.Kind(), in)
+		return 0
+	}
+
 }
 
 // get tag
