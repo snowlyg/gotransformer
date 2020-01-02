@@ -110,10 +110,7 @@ func (t *XlxsTransform) XlxsCellTransformer() error {
 		otf := t.GetOutputValueElemTypeField(i)
 		for iw, v := range t.Title {
 			if iw == otf.Name {
-				cell, err := t.GetExcelCell(v)
-				if err != nil {
-					return err
-				}
+				cell := t.GetExcelCell(v)
 
 				switch of.Kind() {
 				case reflect.String:
@@ -172,15 +169,11 @@ func (t *XlxsTransform) parseTime(cell string) (time.Time, error) {
 }
 
 // 导入基础参数 Cell 文件内容
-func (t *XlxsTransform) GetExcelCell(axis string) (string, error) {
+func (t *XlxsTransform) GetExcelCell(axis string) string {
 
-	cell, err := t.File.GetCellValue(t.ExcelName, axis)
-	if err != nil {
-		fmt.Println(err)
-		return "", err
-	}
+	cell := t.File.GetCellValue(t.ExcelName, axis)
 
-	return cell, nil
+	return cell
 
 }
 
