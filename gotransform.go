@@ -173,7 +173,7 @@ func (t *Transform) transformerPtr() {
 					continue
 				}
 			}
-			if into.Name == "BaseModel" {
+			if into.Name == "BaseModel" || into.Name == "gorm.Model" {
 				if otf.Name == "Id" {
 					of.SetInt(inf.FieldByName("Id").Interface().(int64))
 					continue
@@ -217,13 +217,6 @@ func (t *Transform) transformerMap() {
 					args = []reflect.Value{reflect.ValueOf(inf.Interface().(string))} // append args,first arg is inf.string()
 					startFunc = keyName == otf.Name
 				}
-				//else {
-				//	startFunc = keyName == tag.FiledName
-				//	args = append(args, t.GetInsertValueElem().FieldByName(tag.FiledName))
-				//	for _, vt := range tag.Args {
-				//		args = append(args, reflect.ValueOf(vt))
-				//	}
-				//}
 
 				if tag.Key == "Func" && startFunc {
 					rs := t.CallOutFunc(tag).Call(args)
@@ -249,19 +242,6 @@ func (t *Transform) transformerMap() {
 				t.setMapValue(inf, of)
 				continue
 			}
-
-			//if keyName == "BaseModel" {
-			//	if otf.Name == "Id" {
-			//		of.SetInt(inf.FieldByName("Id").Interface().(int64))
-			//		continue
-			//	} else if otf.Name == "CreatedAt" {
-			//		of.SetString(t.setTime(inf, "CreatedAt", timeFormat))
-			//		continue
-			//	} else if otf.Name == "UpdatedAt" {
-			//		of.SetString(t.setTime(inf, "UpdatedAt", timeFormat))
-			//		continue
-			//	}
-			//}
 
 		}
 	}
