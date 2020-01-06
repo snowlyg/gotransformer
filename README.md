@@ -19,6 +19,12 @@
 - map数据格式化
 - excel 导入数据格式化
 
+## Installation
+
+```
+go get github.com/snowlyg/gotransformer
+
+```
 
 
 ## Example
