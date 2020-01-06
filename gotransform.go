@@ -154,9 +154,17 @@ func (t *Transform) transformerPtr() {
 					}
 				}
 
-				if inf.Kind() == reflect.Ptr {
+				if inf.Kind() == reflect.Ptr { // for beego orm
 					if into.Name == tag.Key {
 						relation := inf.Elem().FieldByName(tag.Value)
+						t.setValue(relation, of)
+						continue
+					}
+				} else if inf.Kind() == reflect.Struct { // for gorm
+					if into.Name == tag.Key {
+						value := &inf
+						relation := value.Elem().FieldByName(tag.Value)
+						fmt.Printf("%v:value \n", value)
 						t.setValue(relation, of)
 						continue
 					}
@@ -173,7 +181,7 @@ func (t *Transform) transformerPtr() {
 					continue
 				}
 			}
-			if into.Name == "BaseModel" || into.Name == "gorm.Model" {
+			if into.Name == "BaseModel" || into.Name == "Model" { // Model for gorm ,BaseModel for beego orm
 				if otf.Name == "Id" {
 					of.SetInt(inf.FieldByName("Id").Interface().(int64))
 					continue

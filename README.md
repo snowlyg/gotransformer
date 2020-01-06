@@ -36,7 +36,7 @@ import (
 "fmt"
 "time"
 
-"github.com/snowlyg/gotransform"
+"github.com/snowlyg/gotransformer"
 )
 
 // 基础数据模型  beego/orm 
