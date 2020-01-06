@@ -162,9 +162,7 @@ func (t *Transform) transformerPtr() {
 					}
 				} else if inf.Kind() == reflect.Struct { // for gorm
 					if into.Name == tag.Key {
-						value := &inf
-						relation := value.Elem().FieldByName(tag.Value)
-						fmt.Printf("%v:value \n", value)
+						relation := inf.FieldByName(tag.Value)
 						t.setValue(relation, of)
 						continue
 					}
