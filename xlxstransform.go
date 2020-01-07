@@ -1,4 +1,4 @@
-package gotransform
+package gotransformer
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package gotransform
+package gotransformer
 
 import (
 	"errors"
@@ -124,7 +124,7 @@ func (t *Transform) transformerPtr() {
 			continue
 		}
 
-		tag := t.getTag(otf)
+		tag := getTag(otf)
 		timeFormat := ""
 		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
 			inf := t.GetInsertValueElemField(iI)
@@ -157,13 +157,13 @@ func (t *Transform) transformerPtr() {
 				if inf.Kind() == reflect.Ptr { // for beego orm
 					if into.Name == tag.Key {
 						relation := inf.Elem().FieldByName(tag.Value)
-						t.setValue(relation, of)
+						setValue(relation, of)
 						continue
 					}
 				} else if inf.Kind() == reflect.Struct { // for gorm
 					if into.Name == tag.Key {
 						relation := inf.FieldByName(tag.Value)
-						t.setValue(relation, of)
+						setValue(relation, of)
 						continue
 					}
 				}
@@ -175,7 +175,7 @@ func (t *Transform) transformerPtr() {
 				}
 
 				if inf.Type() == of.Type() {
-					t.setValue(inf, of)
+					setValue(inf, of)
 					continue
 				}
 			}
@@ -206,7 +206,7 @@ func (t *Transform) transformerMap() {
 			continue
 		}
 
-		tag := t.getTag(otf)
+		tag := getTag(otf)
 		timeFormat := ""
 		for _, k := range t.GetInsertMapKeys() {
 			inf := t.GetInsertMapValue(k)
@@ -258,8 +258,47 @@ func (t *Transform) CallOutFunc(tag *Tag) reflect.Value {
 	return t.GetOutputValue().MethodByName(tag.Value)
 }
 
+// set out map value
+func (t *Transform) setMapValue(in, out reflect.Value) {
+	switch out.Kind() {
+	case reflect.String:
+		out.SetString(getMapValueS(in))
+	case reflect.Slice:
+		reflect.Copy(out, in)
+	case reflect.Bool:
+		out.SetBool(getMapValueB(in))
+	case reflect.Float64, reflect.Float32:
+		out.SetFloat(getMapValueF(in))
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		out.SetInt(getMapValueI(in))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		out.SetUint(getMapValueU(in))
+	default:
+		fmt.Printf("数据类型错误:%v,%v  \n", in.Kind(), in)
+	}
+}
+
+// time format
+func (t *Transform) setTime(inf reflect.Value, fieldName string, timeFormat string) string {
+
+	if inf.IsZero() {
+		return ""
+	}
+	if len(timeFormat) < 1 { // 自定义时间格式
+		timeFormat = t.TimeFormat
+	}
+	args := []reflect.Value{reflect.ValueOf(timeFormat)}
+	if len(fieldName) > 0 { // CreatedAt ,UpdatedAt in BaseModel
+		inf = inf.FieldByName(fieldName)
+	}
+	f := inf.MethodByName("Format")
+	rs := f.Call(args)
+
+	return rs[0].Interface().(string)
+}
+
 // set out value
-func (t *Transform) setValue(in, out reflect.Value) {
+func setValue(in, out reflect.Value) {
 	switch out.Kind() {
 	case reflect.String:
 		out.SetString(in.Interface().(string))
@@ -278,28 +317,8 @@ func (t *Transform) setValue(in, out reflect.Value) {
 	}
 }
 
-// set out map value
-func (t *Transform) setMapValue(in, out reflect.Value) {
-	switch out.Kind() {
-	case reflect.String:
-		out.SetString(t.getMapValueS(in))
-	case reflect.Slice:
-		reflect.Copy(out, in)
-	case reflect.Bool:
-		out.SetBool(t.getMapValueB(in))
-	case reflect.Float64, reflect.Float32:
-		out.SetFloat(t.getMapValueF(in))
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		out.SetInt(t.getMapValueI(in))
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		out.SetUint(t.getMapValueU(in))
-	default:
-		fmt.Printf("数据类型错误:%v,%v  \n", in.Kind(), in)
-	}
-}
-
 // transform map data
-func (t *Transform) getMapValueS(in reflect.Value) string {
+func getMapValueS(in reflect.Value) string {
 	inTypeKind := in.Elem().Type().Kind()
 	switch inTypeKind {
 	case reflect.String:
@@ -324,7 +343,7 @@ func (t *Transform) getMapValueS(in reflect.Value) string {
 }
 
 // transform map data
-func (t *Transform) getMapValueB(in reflect.Value) bool {
+func getMapValueB(in reflect.Value) bool {
 	inTypeKind := in.Elem().Type().Kind()
 	switch inTypeKind {
 	case reflect.String:
@@ -361,7 +380,7 @@ func (t *Transform) getMapValueB(in reflect.Value) bool {
 }
 
 // transform map data
-func (t *Transform) getMapValueF(in reflect.Value) float64 {
+func getMapValueF(in reflect.Value) float64 {
 	inTypeKind := in.Elem().Type().Kind()
 	switch inTypeKind {
 	case reflect.String:
@@ -380,7 +399,7 @@ func (t *Transform) getMapValueF(in reflect.Value) float64 {
 }
 
 // transform map data
-func (t *Transform) getMapValueI(in reflect.Value) int64 {
+func getMapValueI(in reflect.Value) int64 {
 	inTypeKind := in.Elem().Type().Kind()
 	switch inTypeKind {
 	case reflect.String:
@@ -406,7 +425,7 @@ func (t *Transform) getMapValueI(in reflect.Value) int64 {
 }
 
 // transform map data
-func (t *Transform) getMapValueU(in reflect.Value) uint64 {
+func getMapValueU(in reflect.Value) uint64 {
 	inTypeKind := in.Elem().Type().Kind()
 	switch inTypeKind {
 	case reflect.String:
@@ -433,7 +452,7 @@ func (t *Transform) getMapValueU(in reflect.Value) uint64 {
 
 // get tag
 // first arg is insert object self
-func (t *Transform) getTag(otf reflect.StructField) *Tag {
+func getTag(otf reflect.StructField) *Tag {
 	tag := otf.Tag.Get("gtf")
 	rtag := strings.Replace(tag, ")", "", 1)
 	names := strings.Split(rtag, ".")
@@ -457,23 +476,4 @@ func (t *Transform) getTag(otf reflect.StructField) *Tag {
 
 	return &Tag{Key: names[0], Value: arg[0], FiledName: args[0], Args: args[1:]}
 
-}
-
-// time format
-func (t *Transform) setTime(inf reflect.Value, fieldName string, timeFormat string) string {
-
-	if inf.IsZero() {
-		return ""
-	}
-	if len(timeFormat) < 1 { // 自定义时间格式
-		timeFormat = t.TimeFormat
-	}
-	args := []reflect.Value{reflect.ValueOf(timeFormat)}
-	if len(fieldName) > 0 { // CreatedAt ,UpdatedAt in BaseModel
-		inf = inf.FieldByName(fieldName)
-	}
-	f := inf.MethodByName("Format")
-	rs := f.Call(args)
-
-	return rs[0].Interface().(string)
 }
