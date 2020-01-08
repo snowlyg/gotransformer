@@ -1,4 +1,4 @@
-module github.com/snowlyg/gotransformer
+module github.com/snowlyg/gotransformer/v1.0
 
 go 1.13
 
