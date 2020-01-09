@@ -179,9 +179,20 @@ func (t *Transform) transformerPtr() {
 					continue
 				}
 			}
-			if into.Name == "BaseModel" || into.Name == "Model" { // Model for gorm ,BaseModel for beego orm
+			if into.Name == "BaseModel" { // BaseModel for beego orm
 				if otf.Name == "Id" {
 					of.SetInt(inf.FieldByName("Id").Interface().(int64))
+					continue
+				} else if otf.Name == "CreatedAt" {
+					of.SetString(t.setTime(inf, "CreatedAt", timeFormat))
+					continue
+				} else if otf.Name == "UpdatedAt" {
+					of.SetString(t.setTime(inf, "UpdatedAt", timeFormat))
+					continue
+				}
+			} else if into.Name == "Model" { //Model for gorm
+				if otf.Name == "Id" {
+					of.SetInt(inf.FieldByName("ID").Interface().(int64))
 					continue
 				} else if otf.Name == "CreatedAt" {
 					of.SetString(t.setTime(inf, "CreatedAt", timeFormat))
