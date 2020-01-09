@@ -25,6 +25,6 @@
 ## Installation
 
 ```
-go get -u github.com/snowlyg/gotransformer
+go get  github.com/snowlyg/gotransformer@latest
 
 ```
