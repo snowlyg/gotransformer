@@ -22,6 +22,9 @@
 - [map数据格式化](_example/map/map.go)
 - [excel 导入数据格式化](_example/excel/excel.go)
 
+
+- 具体项目使用实例，请参考[https://github.com/snowlyg/IrisAdminApi](https://github.com/snowlyg/IrisAdminApi)
+
 ## Installation
 
 ```
