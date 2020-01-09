@@ -192,7 +192,7 @@ func (t *Transform) transformerPtr() {
 				}
 			} else if into.Name == "Model" { //Model for gorm
 				if otf.Name == "Id" {
-					of.SetInt(inf.FieldByName("ID").Interface().(int64))
+					of.SetInt(int64(inf.FieldByName("ID").Interface().(uint)))
 					continue
 				} else if otf.Name == "CreatedAt" {
 					of.SetString(t.setTime(inf, "CreatedAt", timeFormat))
