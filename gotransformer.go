@@ -29,85 +29,15 @@ func NewTransform(outObj, inObj interface{}, timeFormat string) *Transform {
 	}
 }
 
-// 输出数据的值
-func (t *Transform) GetOutputValue() reflect.Value {
-	return reflect.ValueOf(t.OutputObj)
-}
-
-// 输出数据的值类型
-func (t *Transform) GetOutputValueKind() reflect.Kind {
-	return t.GetOutputValue().Kind()
-}
-
-// 输出数据的值的成员
-func (t *Transform) GetOutputValueElem() reflect.Value {
-	return reflect.ValueOf(t.OutputObj).Elem()
-}
-
-// 输出数据的值的成员类型
-func (t *Transform) GetOutputValueElemType() reflect.Type {
-	return reflect.ValueOf(t.OutputObj).Elem().Type()
-}
-
-// 输出数据的值的成员的值
-func (t *Transform) GetOutputValueElemField(i int) reflect.Value {
-	return reflect.ValueOf(t.OutputObj).Elem().Field(i)
-}
-
-// 输出数据的值的成员类型的值
-func (t *Transform) GetOutputValueElemTypeField(i int) reflect.StructField {
-	return reflect.ValueOf(t.OutputObj).Elem().Type().Field(i)
-}
-
-// 输入数据的值
-func (t *Transform) GetInsertValue() reflect.Value {
-	return reflect.ValueOf(t.InsertObj)
-}
-
-// 输入 map类型数据的 keys
-func (t *Transform) GetInsertMapKeys() []reflect.Value {
-	return reflect.ValueOf(t.InsertObj).MapKeys()
-}
-
-// 输入map类型数据的 key 对应数数据
-func (t *Transform) GetInsertMapValue(key reflect.Value) reflect.Value {
-	return reflect.ValueOf(t.InsertObj).MapIndex(key)
-}
-
-// 输入数据的值类型
-func (t *Transform) GetInsertValueKind() reflect.Kind {
-	return t.GetInsertValue().Kind()
-}
-
-// 输入数据的值的成员
-func (t *Transform) GetInsertValueElem() reflect.Value {
-	return reflect.ValueOf(t.InsertObj).Elem()
-}
-
-// 输入数据的值的成员的类型
-func (t *Transform) GetInsertValueElemType() reflect.Type {
-	return reflect.ValueOf(t.InsertObj).Elem().Type()
-}
-
-// 输入数据的值的成员的值
-func (t *Transform) GetInsertValueElemField(i int) reflect.Value {
-	return reflect.ValueOf(t.InsertObj).Elem().Field(i)
-}
-
-// 输入数据的值的成员类型的值
-func (t *Transform) GetInsertValueElemTypeField(i int) reflect.StructField {
-	return reflect.ValueOf(t.InsertObj).Elem().Type().Field(i)
-}
-
 func (t *Transform) Transformer() error {
 
-	if t.GetOutputValueKind() != reflect.Ptr {
+	if GetValueKind(t.OutputObj) != reflect.Ptr {
 		return errors.New("输出数据格式必须是指针")
 	}
 
-	if t.GetInsertValueKind() == reflect.Map {
+	if GetValueKind(t.InsertObj) == reflect.Map {
 		t.transformerMap()
-	} else if t.GetInsertValueKind() == reflect.Ptr {
+	} else if GetValueKind(t.InsertObj) == reflect.Ptr {
 		t.transformerPtr()
 	}
 
@@ -116,9 +46,9 @@ func (t *Transform) Transformer() error {
 
 // ptr 类型数据转换
 func (t *Transform) transformerPtr() {
-	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
-		of := t.GetOutputValueElemField(i)
-		otf := t.GetOutputValueElemTypeField(i)
+	for i := 0; i < GetValueElem(t.OutputObj).NumField(); i++ {
+		of := GetValueElemField(t.OutputObj, i)
+		otf := GetValueElemTypeField(t.OutputObj, i)
 		if !of.CanSet() {
 			fmt.Printf("%v:不能被修改 \n", otf.Name)
 			continue
@@ -126,9 +56,9 @@ func (t *Transform) transformerPtr() {
 
 		tag := getTag(otf)
 		timeFormat := ""
-		for iI := 0; iI < t.GetInsertValueElem().NumField(); iI++ {
-			inf := t.GetInsertValueElemField(iI)
-			into := t.GetInsertValueElemTypeField(iI)
+		for iI := 0; iI < GetValueElem(t.InsertObj).NumField(); iI++ {
+			inf := GetValueElemField(t.InsertObj, iI)
+			into := GetValueElemTypeField(t.InsertObj, iI)
 			if tag != nil {
 				if tag.Key == "Time" {
 					timeFormat = tag.Value
@@ -141,7 +71,7 @@ func (t *Transform) transformerPtr() {
 					startFunc = into.Name == otf.Name
 				} else {
 					startFunc = into.Name == tag.FiledName
-					args = append(args, t.GetInsertValueElem().FieldByName(tag.FiledName))
+					args = append(args, GetValueElem(t.InsertObj).FieldByName(tag.FiledName))
 					for _, vt := range tag.Args {
 						args = append(args, reflect.ValueOf(vt))
 					}
@@ -209,9 +139,9 @@ func (t *Transform) transformerPtr() {
 
 // map 类型数据转换
 func (t *Transform) transformerMap() {
-	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
-		of := t.GetOutputValueElemField(i)
-		otf := t.GetOutputValueElemTypeField(i)
+	for i := 0; i < GetValueElem(t.OutputObj).NumField(); i++ {
+		of := GetValueElemField(t.OutputObj, i)
+		otf := GetValueElemTypeField(t.OutputObj, i)
 		if !of.CanSet() {
 			fmt.Printf("%v:不能被修改 \n", otf.Name)
 			continue
@@ -219,8 +149,8 @@ func (t *Transform) transformerMap() {
 
 		tag := getTag(otf)
 		timeFormat := ""
-		for _, k := range t.GetInsertMapKeys() {
-			inf := t.GetInsertMapValue(k)
+		for _, k := range GetMapKeys(t.InsertObj) {
+			inf := GetMapValue(t.InsertObj, k)
 			keyName := k.String()
 
 			if tag != nil {
@@ -266,7 +196,7 @@ func (t *Transform) transformerMap() {
 
 // call out func
 func (t *Transform) CallOutFunc(tag *Tag) reflect.Value {
-	return t.GetOutputValue().MethodByName(tag.Value)
+	return GetValue(t.OutputObj).MethodByName(tag.Value)
 }
 
 // set out map value
@@ -306,6 +236,46 @@ func (t *Transform) setTime(inf reflect.Value, fieldName string, timeFormat stri
 	rs := f.Call(args)
 
 	return rs[0].Interface().(string)
+}
+
+// 数据的值
+func GetValue(o interface{}) reflect.Value {
+	return reflect.ValueOf(o)
+}
+
+// 数据的值类型
+func GetValueKind(o interface{}) reflect.Kind {
+	return reflect.ValueOf(o).Kind()
+}
+
+// 数据的值的成员
+func GetValueElem(o interface{}) reflect.Value {
+	return reflect.ValueOf(o).Elem()
+}
+
+// 数据的值的成员类型
+func GetValueElemType(o interface{}) reflect.Type {
+	return reflect.ValueOf(o).Elem().Type()
+}
+
+// 数据的值的成员的值
+func GetValueElemField(o interface{}, i int) reflect.Value {
+	return reflect.ValueOf(o).Elem().Field(i)
+}
+
+// 数据的值的成员类型的值
+func GetValueElemTypeField(o interface{}, i int) reflect.StructField {
+	return reflect.ValueOf(o).Elem().Type().Field(i)
+}
+
+//  map类型数据的 keys
+func GetMapKeys(o interface{}) []reflect.Value {
+	return reflect.ValueOf(o).MapKeys()
+}
+
+// map类型数据的 key 对应数数据
+func GetMapValue(o interface{}, key reflect.Value) reflect.Value {
+	return reflect.ValueOf(o).MapIndex(key)
 }
 
 // set out value

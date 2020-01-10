@@ -17,12 +17,10 @@ func TestNewXlxsTransform(t *testing.T) {
 		timeFormat string
 		file       *excelize.File
 	}
-	tests := []struct {
+	var tests []struct {
 		name string
 		args args
 		want *XlxsTransform
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -45,13 +43,11 @@ func TestXlxsTransform_GetExcelCell(t1 *testing.T) {
 	type args struct {
 		axis string
 	}
-	tests := []struct {
+	var tests []struct {
 		name   string
 		fields fields
 		args   args
 		want   string
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -70,212 +66,6 @@ func TestXlxsTransform_GetExcelCell(t1 *testing.T) {
 	}
 }
 
-func TestXlxsTransform_GetOutputValue(t1 *testing.T) {
-	type fields struct {
-		OutputObj  interface{}
-		Title      map[string]string
-		Row        []string
-		ExcelName  string
-		File       *excelize.File
-		TimeFormat string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   reflect.Value
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t1.Run(tt.name, func(t1 *testing.T) {
-			t := &XlxsTransform{
-				OutputObj:  tt.fields.OutputObj,
-				Title:      tt.fields.Title,
-				Row:        tt.fields.Row,
-				ExcelName:  tt.fields.ExcelName,
-				File:       tt.fields.File,
-				TimeFormat: tt.fields.TimeFormat,
-			}
-			if got := t.GetOutputValue(); !reflect.DeepEqual(got, tt.want) {
-				t1.Errorf("GetOutputValue() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestXlxsTransform_GetOutputValueElem(t1 *testing.T) {
-	type fields struct {
-		OutputObj  interface{}
-		Title      map[string]string
-		Row        []string
-		ExcelName  string
-		File       *excelize.File
-		TimeFormat string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   reflect.Value
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t1.Run(tt.name, func(t1 *testing.T) {
-			t := &XlxsTransform{
-				OutputObj:  tt.fields.OutputObj,
-				Title:      tt.fields.Title,
-				Row:        tt.fields.Row,
-				ExcelName:  tt.fields.ExcelName,
-				File:       tt.fields.File,
-				TimeFormat: tt.fields.TimeFormat,
-			}
-			if got := t.GetOutputValueElem(); !reflect.DeepEqual(got, tt.want) {
-				t1.Errorf("GetOutputValueElem() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestXlxsTransform_GetOutputValueElemField(t1 *testing.T) {
-	type fields struct {
-		OutputObj  interface{}
-		Title      map[string]string
-		Row        []string
-		ExcelName  string
-		File       *excelize.File
-		TimeFormat string
-	}
-	type args struct {
-		i int
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   reflect.Value
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t1.Run(tt.name, func(t1 *testing.T) {
-			t := &XlxsTransform{
-				OutputObj:  tt.fields.OutputObj,
-				Title:      tt.fields.Title,
-				Row:        tt.fields.Row,
-				ExcelName:  tt.fields.ExcelName,
-				File:       tt.fields.File,
-				TimeFormat: tt.fields.TimeFormat,
-			}
-			if got := t.GetOutputValueElemField(tt.args.i); !reflect.DeepEqual(got, tt.want) {
-				t1.Errorf("GetOutputValueElemField() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestXlxsTransform_GetOutputValueElemType(t1 *testing.T) {
-	type fields struct {
-		OutputObj  interface{}
-		Title      map[string]string
-		Row        []string
-		ExcelName  string
-		File       *excelize.File
-		TimeFormat string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   reflect.Type
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t1.Run(tt.name, func(t1 *testing.T) {
-			t := &XlxsTransform{
-				OutputObj:  tt.fields.OutputObj,
-				Title:      tt.fields.Title,
-				Row:        tt.fields.Row,
-				ExcelName:  tt.fields.ExcelName,
-				File:       tt.fields.File,
-				TimeFormat: tt.fields.TimeFormat,
-			}
-			if got := t.GetOutputValueElemType(); !reflect.DeepEqual(got, tt.want) {
-				t1.Errorf("GetOutputValueElemType() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestXlxsTransform_GetOutputValueElemTypeField(t1 *testing.T) {
-	type fields struct {
-		OutputObj  interface{}
-		Title      map[string]string
-		Row        []string
-		ExcelName  string
-		File       *excelize.File
-		TimeFormat string
-	}
-	type args struct {
-		i int
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   reflect.StructField
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t1.Run(tt.name, func(t1 *testing.T) {
-			t := &XlxsTransform{
-				OutputObj:  tt.fields.OutputObj,
-				Title:      tt.fields.Title,
-				Row:        tt.fields.Row,
-				ExcelName:  tt.fields.ExcelName,
-				File:       tt.fields.File,
-				TimeFormat: tt.fields.TimeFormat,
-			}
-			if got := t.GetOutputValueElemTypeField(tt.args.i); !reflect.DeepEqual(got, tt.want) {
-				t1.Errorf("GetOutputValueElemTypeField() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestXlxsTransform_GetOutputValueKind(t1 *testing.T) {
-	type fields struct {
-		OutputObj  interface{}
-		Title      map[string]string
-		Row        []string
-		ExcelName  string
-		File       *excelize.File
-		TimeFormat string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   reflect.Kind
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t1.Run(tt.name, func(t1 *testing.T) {
-			t := &XlxsTransform{
-				OutputObj:  tt.fields.OutputObj,
-				Title:      tt.fields.Title,
-				Row:        tt.fields.Row,
-				ExcelName:  tt.fields.ExcelName,
-				File:       tt.fields.File,
-				TimeFormat: tt.fields.TimeFormat,
-			}
-			if got := t.GetOutputValueKind(); got != tt.want {
-				t1.Errorf("GetOutputValueKind() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestXlxsTransform_XlxsCellTransformer(t1 *testing.T) {
 	type fields struct {
 		OutputObj  interface{}
@@ -285,12 +75,10 @@ func TestXlxsTransform_XlxsCellTransformer(t1 *testing.T) {
 		File       *excelize.File
 		TimeFormat string
 	}
-	tests := []struct {
+	var tests []struct {
 		name    string
 		fields  fields
 		wantErr bool
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -318,12 +106,10 @@ func TestXlxsTransform_XlxsTransformer(t1 *testing.T) {
 		File       *excelize.File
 		TimeFormat string
 	}
-	tests := []struct {
+	var tests []struct {
 		name    string
 		fields  fields
 		wantErr bool
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -354,14 +140,12 @@ func TestXlxsTransform_isExists(t1 *testing.T) {
 	type args struct {
 		s string
 	}
-	tests := []struct {
+	var tests []struct {
 		name   string
 		fields fields
 		args   args
 		want   error
 		want1  int
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -396,14 +180,12 @@ func TestXlxsTransform_parseTime(t1 *testing.T) {
 	type args struct {
 		cell string
 	}
-	tests := []struct {
+	var tests []struct {
 		name    string
 		fields  fields
 		args    args
 		want    time.Time
 		wantErr bool
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -431,12 +213,10 @@ func Test_filipValueString(t *testing.T) {
 	type args struct {
 		o map[string]string
 	}
-	tests := []struct {
+	var tests []struct {
 		name string
 		args args
 		want map[string]string
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
