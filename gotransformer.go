@@ -334,7 +334,7 @@ func getMapValueB(in reflect.Value) bool {
 			return false
 		}
 	case reflect.Bool:
-		return in.Bool()
+		return in.Interface().(bool)
 	case reflect.Float64, reflect.Float32:
 		if in.Float() > 0 {
 			return true
