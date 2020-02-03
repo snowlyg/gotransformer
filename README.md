@@ -8,6 +8,9 @@
     <a href="https://github.com/snowlyg/gotransformer/blob/master/LICENSE"><img src="https://img.shields.io/github/license/snowlyg/gotransformer" alt="Licenses"></a>
 </p>
 
+>本项目主要是用于数据的格式化和转换，主要用于模型数据字段太多，同时很多字段数据在接口输出的时候都需要做特殊处理（比如时间，数组，json等等）。
+>而且不同接口或者不同角色可能需要做不同的数据处理(比如列表，详情等等)。
+
 #### 更新日志
 [更新日志](UPDATE.MD)
 
@@ -29,5 +32,4 @@
 
 ```
 go get  github.com/snowlyg/gotransformer@latest
-
 ```
