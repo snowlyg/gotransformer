@@ -1,4 +1,4 @@
-package gotransform
+package gotransformer
 
 import (
 	"fmt"
@@ -29,34 +29,35 @@ func NewXlxsTransform(outObj interface{}, title map[string]string, row []string,
 	}
 }
 
-func (t *XlxsTransform) GetOutputValue() reflect.Value {
-	return reflect.ValueOf(t.OutputObj)
-}
-
-func (t *XlxsTransform) GetOutputValueKind() reflect.Kind {
-	return t.GetOutputValue().Kind()
-}
-
-func (t *XlxsTransform) GetOutputValueElem() reflect.Value {
-	return reflect.ValueOf(t.OutputObj).Elem()
-}
-
-func (t *XlxsTransform) GetOutputValueElemType() reflect.Type {
-	return reflect.ValueOf(t.OutputObj).Elem().Type()
-}
-
-func (t *XlxsTransform) GetOutputValueElemField(i int) reflect.Value {
-	return reflect.ValueOf(t.OutputObj).Elem().Field(i)
-}
-
-func (t *XlxsTransform) GetOutputValueElemTypeField(i int) reflect.StructField {
-	return reflect.ValueOf(t.OutputObj).Elem().Type().Field(i)
-}
+//
+//func (t *XlxsTransform) GetOutputValue() reflect.Value {
+//	return reflect.ValueOf(t.OutputObj)
+//}
+//
+//func (t *XlxsTransform) GetOutputValueKind() reflect.Kind {
+//	return t.GetOutputValue().Kind()
+//}
+//
+//func (t *XlxsTransform) GetOutputValueElem() reflect.Value {
+//	return reflect.ValueOf(t.OutputObj).Elem()
+//}
+//
+//func (t *XlxsTransform) GetOutputValueElemType() reflect.Type {
+//	return reflect.ValueOf(t.OutputObj).Elem().Type()
+//}
+//
+//func (t *XlxsTransform) GetOutputValueElemField(i int) reflect.Value {
+//	return reflect.ValueOf(t.OutputObj).Elem().Field(i)
+//}
+//
+//func (t *XlxsTransform) GetOutputValueElemTypeField(i int) reflect.StructField {
+//	return reflect.ValueOf(t.OutputObj).Elem().Type().Field(i)
+//}
 
 func (t *XlxsTransform) XlxsTransformer() error {
-	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
-		of := t.GetOutputValueElemField(i)
-		otf := t.GetOutputValueElemTypeField(i)
+	for i := 0; i < GetValueElem(t.OutputObj).NumField(); i++ {
+		of := GetValueElemField(t.OutputObj, i)
+		otf := GetValueElemTypeField(t.OutputObj, i)
 		for _, iw := range t.Title {
 			if iw == otf.Name {
 				err, rI := t.isExists(iw)
@@ -105,9 +106,9 @@ func (t *XlxsTransform) XlxsTransformer() error {
 
 // get excel cell data
 func (t *XlxsTransform) XlxsCellTransformer() error {
-	for i := 0; i < t.GetOutputValueElem().NumField(); i++ {
-		of := t.GetOutputValueElemField(i)
-		otf := t.GetOutputValueElemTypeField(i)
+	for i := 0; i < GetValueElem(t.OutputObj).NumField(); i++ {
+		of := GetValueElemField(t.OutputObj, i)
+		otf := GetValueElemTypeField(t.OutputObj, i)
 		for iw, v := range t.Title {
 			if iw == otf.Name {
 				cell := t.GetExcelCell(v)
