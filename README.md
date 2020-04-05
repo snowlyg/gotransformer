@@ -1,4 +1,4 @@
-<h1 align="center">go-transformer</h1>
+<h1 align="center">gotransformer</h1>
 
 <p align="center">
     <a href="https://travis-ci.org/snowlyg/gotransformer"><img src="https://travis-ci.org/snowlyg/gotransformer.svg?branch=master" alt="Build Status"></a>
