@@ -39,7 +39,7 @@ type Response struct {
 	SonNames   string          `gtf:"Func.FormatTime(Sons)"`          // realtion 获取关联 Sons 的 Names
 	Sons       []*ResponseSon  // realtion 获取关联 Sons
 	Parent     *ResponseParent // realtion 获取关联 Parent
-	Time       string          `gtf:"Time.2006-01-02 15:04:05"` // 使用  2006-01-02 15:04:05 自定义格式化时间
+	Time       string          `time:"2006-01-02 15:04:05"` // 使用  2006-01-02 15:04:05 自定义格式化时间
 	Time1      string          // 使用 `gotransform.NewTransform(&response, model, time.RFC3339)` 定义的时间格式
 	Rmk        string
 	DeletedAt  string

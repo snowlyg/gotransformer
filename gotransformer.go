@@ -55,14 +55,10 @@ func (t *Transform) transformerPtr() {
 		}
 
 		tag := getTag(otf)
-		timeFormat := ""
 		for iI := 0; iI < GetValueElem(t.InsertObj).NumField(); iI++ {
 			inf := GetValueElemField(t.InsertObj, iI)
 			into := GetValueElemTypeField(t.InsertObj, iI)
 			if tag != nil {
-				if tag.Key == "Time" {
-					timeFormat = tag.Value
-				}
 				var args []reflect.Value
 				startFunc := false
 				// 执行自定义方法
@@ -98,9 +94,16 @@ func (t *Transform) transformerPtr() {
 					}
 				}
 			}
-			if into.Name == otf.Name {
+
+			time := otf.Tag.Get("time")
+			if len(time) > 0 {
+				t.TimeFormat = time
+			}
+
+			name := otf.Tag.Get("name")
+			if into.Name == otf.Name || into.Name == name {
 				if into.Type.Name() == "Time" {
-					of.SetString(t.setTime(inf, "", timeFormat))
+					of.SetString(t.setTime(inf, "", t.TimeFormat))
 					continue
 				}
 
@@ -114,10 +117,10 @@ func (t *Transform) transformerPtr() {
 					of.SetInt(inf.FieldByName("Id").Interface().(int64))
 					continue
 				} else if otf.Name == "CreatedAt" {
-					of.SetString(t.setTime(inf, "CreatedAt", timeFormat))
+					of.SetString(t.setTime(inf, "CreatedAt", t.TimeFormat))
 					continue
 				} else if otf.Name == "UpdatedAt" {
-					of.SetString(t.setTime(inf, "UpdatedAt", timeFormat))
+					of.SetString(t.setTime(inf, "UpdatedAt", t.TimeFormat))
 					continue
 				}
 			} else if into.Name == "Model" { //Model for gorm
@@ -125,10 +128,10 @@ func (t *Transform) transformerPtr() {
 					of.SetInt(int64(inf.FieldByName("ID").Interface().(uint)))
 					continue
 				} else if otf.Name == "CreatedAt" {
-					of.SetString(t.setTime(inf, "CreatedAt", timeFormat))
+					of.SetString(t.setTime(inf, "CreatedAt", t.TimeFormat))
 					continue
 				} else if otf.Name == "UpdatedAt" {
-					of.SetString(t.setTime(inf, "UpdatedAt", timeFormat))
+					of.SetString(t.setTime(inf, "UpdatedAt", t.TimeFormat))
 					continue
 				}
 			}
@@ -148,15 +151,11 @@ func (t *Transform) transformerMap() {
 		}
 
 		tag := getTag(otf)
-		timeFormat := ""
 		for _, k := range GetMapKeys(t.InsertObj) {
 			inf := GetMapValue(t.InsertObj, k)
 			keyName := k.String()
 
 			if tag != nil {
-				if tag.Key == "Time" {
-					timeFormat = tag.Value
-				}
 				var args []reflect.Value
 				startFunc := false
 				// 执行自定义方法
@@ -180,9 +179,15 @@ func (t *Transform) transformerMap() {
 				}
 			}
 
-			if keyName == otf.Name {
+			time := otf.Tag.Get("time")
+			if len(time) > 0 {
+				t.TimeFormat = time
+			}
+
+			name := otf.Tag.Get("name")
+			if keyName == otf.Name || keyName == name {
 				if otf.Type.Name() == "Time" {
-					of.SetString(t.setTime(inf, "", timeFormat))
+					of.SetString(t.setTime(inf, "", t.TimeFormat))
 					continue
 				}
 
