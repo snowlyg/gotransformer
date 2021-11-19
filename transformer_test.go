@@ -1,11 +1,12 @@
-package main
+package gotransformer
 
 import (
 	"fmt"
 	"html"
+	"testing"
 	"time"
 
-	gtf "github.com/snowlyg/gotransformer"
+	"github.com/stretchr/testify/assert"
 )
 
 // 基础数据模型  beego/orm
@@ -33,10 +34,10 @@ type Model struct {
 type Response struct {
 	Id         int64
 	Name       string
-	LongText   string          `gtf:"Func.GetValueEnd"`               // 简单使用自定义方法格式化，使用 gtf 标识加`Func.funcName()`，默认第一个参数为转换数据本身
-	Status     string          `gtf:"Func.GetUnitCode(LongText,1,2)"` // 使用带参数方法格式化(多个参数)，使用 gtf 标识加`Func.funcName(arg1,arg2,arg3)` 当有多个参数时候，自定义方法的第一个参数为需要转换数据的键名称
-	ParentName string          `gtf:"Parent.Name"`                    // realtion 获取关联 Parent 的 Name
-	SonNames   string          `gtf:"Func.GetSonNames(Sons)"`         // realtion 获取关联 Sons 的 Names
+	LongText   string          `gtf:"Func.GetValueEnd"`             // 简单使用自定义方法格式化，使用 gtf 标识加`Func.funcName()`，默认第一个参数为转换数据本身
+	Status     string          `gtf:"Func.GetUnitCode(Status,1,2)"` // 使用带参数方法格式化(多个参数)，使用 gtf 标识加`Func.funcName(arg1,arg2,arg3)` 当有多个参数时候，自定义方法的第一个参数为需要转换数据的键名称
+	ParentName string          `gtf:"Parent.Name"`                  // realtion 获取关联 Parent 的 Name
+	SonNames   string          `gtf:"Func.GetSonNames(Sons)"`       // realtion 获取关联 Sons 的 Names
 	Sons       []*ResponseSon  // realtion 获取关联 Sons
 	Parent     *ResponseParent // realtion 获取关联 Parent
 	Time       string          `time:"2006-01-02 15:04:05"`             // 使用  2006-01-02 15:04:05 自定义格式化时间
@@ -113,8 +114,8 @@ func (r *Response) GetUnitCode(v, t, s string) string {
 	}
 }
 
-func main() {
-
+func TestTransform_TransformerReal(t *testing.T) {
+	assert := assert.New(t)
 	baseModel := BaseModel{
 		1,
 		time.Now(),
@@ -144,15 +145,13 @@ func main() {
 
 	// struct
 	response := &Response{}
-	g := gtf.NewTransform(response, model, time.RFC3339)
+	g := NewTransform(response, &model, time.RFC3339)
 	err := g.Transformer()
-	if err != nil {
-		_ = fmt.Sprintf("err:%v", err)
-	}
+	assert.NoError(err)
 
 	// Parent 关联关系
 	responseP := &ResponseParent{}
-	gp := gtf.NewTransform(responseP, model.Parent, time.RFC3339)
+	gp := NewTransform(responseP, model.Parent, time.RFC3339)
 	err = gp.Transformer()
 	if err != nil {
 		_ = fmt.Sprintf("err:%v", err)
@@ -163,7 +162,7 @@ func main() {
 	var responseS []*ResponseSon
 	for _, s := range model.Sons {
 		r := &ResponseSon{}
-		g1 := gtf.NewTransform(r, s, time.RFC3339)
+		g1 := NewTransform(r, s, time.RFC3339)
 		err := g1.Transformer()
 		if err != nil {
 			_ = fmt.Sprintf("err:%v", err)
@@ -176,19 +175,30 @@ func main() {
 
 	_ = fmt.Sprintf("response:%v", response)
 
+	assert.Equal(response.Name, model.Name, "response.Name:%v, model.Name:%v", response.Name, model.Name)
+	assert.Equal(response.Id, model.Id)
+	assert.Equal(response.LongText, response.GetValueEnd(model.LongText))
+	assert.Equal(response.Status, response.GetUnitCode(model.Status, "1", "2"))
+	assert.Equal(response.ParentName, model.Parent.Name)
+	assert.Equal(response.SonNames, response.GetSonNames(model.Sons))
+
 	// slice
-	models := []*Model{&model}
-	var responses []*Response
+	models := []Model{model}
+	var responses []Response
 	for _, m := range models {
 		r := Response{}
-		g1 := gtf.NewTransform(&r, m, time.RFC3339)
+		g1 := NewTransform(&r, &m, time.RFC3339)
 		err := g1.Transformer()
-		if err != nil {
-			_ = fmt.Sprintf("err:%v", err)
-		}
+		assert.NoError(err)
+		responses = append(responses, r)
+		// _ = fmt.Sprintf("responses:%v", responses)
 
-		responses = append(responses, &r)
-		_ = fmt.Sprintf("responses:%v", responses)
+		assert.Equal(response.Name, model.Name, "response.Name:%v, model.Name:%v", response.Name, model.Name)
+		assert.Equal(response.Id, model.Id)
+		assert.Equal(response.LongText, response.GetValueEnd(model.LongText))
+		assert.Equal(response.Status, response.GetUnitCode(model.Status, "1", "2"))
+		assert.Equal(response.ParentName, model.Parent.Name)
+		assert.Equal(response.SonNames, response.GetSonNames(model.Sons))
 	}
-
+	assert.Equal(len(responses), len(models))
 }

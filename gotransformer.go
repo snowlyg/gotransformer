@@ -17,7 +17,7 @@ type Transform struct {
 type Tag struct {
 	Key       string
 	Value     string
-	FiledName string
+	FieldName string
 	Args      []string
 }
 
@@ -58,16 +58,17 @@ func (t *Transform) transformerPtr() {
 		for iI := 0; iI < GetValueElem(t.InsertObj).NumField(); iI++ {
 			inf := GetValueElemField(t.InsertObj, iI)
 			into := GetValueElemTypeField(t.InsertObj, iI)
+
 			if tag != nil {
 				var args []reflect.Value
 				startFunc := false
 				// 执行自定义方法
-				if len(tag.FiledName) < 1 { // 标签只定义了一个参数，则默认第一个参数为 inf.String()
+				if len(tag.FieldName) < 1 { // 标签只定义了一个参数，则默认第一个参数为 inf.String()
 					args = []reflect.Value{reflect.ValueOf(inf.String())} // append args,first arg is inf.string()
 					startFunc = into.Name == otf.Name
 				} else {
-					startFunc = into.Name == tag.FiledName
-					args = append(args, GetValueElem(t.InsertObj).FieldByName(tag.FiledName))
+					startFunc = into.Name == tag.FieldName
+					args = append(args, GetValueElem(t.InsertObj).FieldByName(tag.FieldName))
 					for _, vt := range tag.Args {
 						args = append(args, reflect.ValueOf(vt))
 					}
@@ -102,6 +103,7 @@ func (t *Transform) transformerPtr() {
 
 			name := otf.Tag.Get("name")
 			if into.Name == otf.Name || into.Name == name {
+
 				if into.Type.Name() == "Time" {
 					of.SetString(t.setTime(inf, "", t.TimeFormat))
 					continue
@@ -159,7 +161,7 @@ func (t *Transform) transformerMap() {
 				var args []reflect.Value
 				startFunc := false
 				// 执行自定义方法
-				if len(tag.FiledName) < 1 { // 标签只定义了一个参数，则默认第一个参数为 inf.String()
+				if len(tag.FieldName) < 1 { // 标签只定义了一个参数，则默认第一个参数为 inf.String()
 					args = []reflect.Value{reflect.ValueOf(inf.Interface().(string))} // append args,first arg is inf.string()
 					startFunc = keyName == otf.Name
 				}
@@ -457,9 +459,9 @@ func getTag(otf reflect.StructField) *Tag {
 
 	args := strings.Split(arg[1], ",") // all args
 	if len(args) == 1 {
-		return &Tag{Key: names[0], Value: arg[0], FiledName: args[0]}
+		return &Tag{Key: names[0], Value: arg[0], FieldName: args[0]}
 	}
 
-	return &Tag{Key: names[0], Value: arg[0], FiledName: args[0], Args: args[1:]}
+	return &Tag{Key: names[0], Value: arg[0], FieldName: args[0], Args: args[1:]}
 
 }
